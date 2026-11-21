@@ -18,3 +18,4 @@ And for this session:
 6. [Accessible oral-first interface](tasks/accessible-ui.md)
 7. [Agentic checklist and reminder](tasks/agentic-checklist.md)
 8. [Easy-read pitch and live demo](tasks/easyread-pitch.md)
+9. [Any paper, read by its context](tasks/context-categories.md)
