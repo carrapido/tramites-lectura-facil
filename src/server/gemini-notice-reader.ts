@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import type { NoticeImage, NoticeReader, NoticeReading } from '@/tramites/ports';
 
+import { factSchema } from './fact-schema';
 import { GEMINI_MODEL, type GenerateContentClient } from './gemini-writer';
 import { withCredentialMapping } from './google-errors';
 
@@ -18,21 +19,10 @@ const INSTRUCTION = [
   '"box" es opcional y marca la zona de la cita en la foto, con valores de 0 a 1.',
 ].join(' ');
 
-const unit = z.number().min(0).max(1);
-
 const geminiReading = z.object({
   readable: z.boolean(),
   transcript: z.string(),
-  facts: z
-    .array(
-      z.object({
-        kind: z.string().min(1),
-        text: z.string().min(1),
-        sourceQuote: z.string().min(1),
-        box: z.object({ x: unit, y: unit, width: unit, height: unit }).optional(),
-      }),
-    )
-    .max(7),
+  facts: z.array(factSchema).max(7),
 });
 
 const geminiAnswer = z.object({ text: z.string().min(1) });

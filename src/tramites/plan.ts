@@ -1,6 +1,6 @@
-import { MAX_PLAIN_WORDS } from './easy-read';
 import type { ChecklistItem, Fact, Plan, PlanProposer, Reminder, ReminderScheduler } from './ports';
 import { collapseWhitespace, isQuotedIn } from './quote-match';
+import { countWords, MAX_PLAIN_WORDS } from './text-rules';
 
 export type { ChecklistItem, Plan, Reminder } from './ports';
 
@@ -91,9 +91,4 @@ const PERSONAL_ID = /\b(?:[A-Z]{4}\d{6}[HMX][A-Z]{5}[A-Z\d]\d|[A-Z]{6}\d{8}[HMX]
 
 function withoutPersonalIds(text: string): string {
   return collapseWhitespace(text.replaceAll(PERSONAL_ID, ''));
-}
-
-/** Words are whitespace-separated tokens. */
-function countWords(text: string): number {
-  return text.split(/\s+/).filter((word) => word.length > 0).length;
 }
