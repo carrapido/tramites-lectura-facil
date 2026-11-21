@@ -31,7 +31,7 @@ import { GeminiNoticeReader } from './gemini-notice-reader';
 import { GeminiPlanProposer } from './gemini-plan-proposer';
 import { GeminiVoiceSynthesizer } from './gemini-voice';
 import { GeminiPlainLanguageWriter } from './gemini-writer';
-import { readGoogleEnv } from './google-env';
+import { defaultQuotaProject, readGoogleEnv, type GoogleEnv } from './google-env';
 import { sha256 } from './hash';
 import { localDateIn, NOTICE_TIME_ZONE } from './local-date';
 
@@ -72,7 +72,7 @@ export function composeNoticeReader(): NoticeReader {
   return byDemoMode<NoticeReader>(
     () => new ReplayNoticeReader(recordings),
     () => {
-      const { project, location } = readGoogleEnv(process.env);
+      const { project, location } = liveGoogleEnv();
       return new GeminiNoticeReader(createGeminiModels(project, location));
     },
     (reader) => new RecordingNoticeReader(reader, recordings),
@@ -84,7 +84,7 @@ export function composePlan(): PlanDependencies {
   const proposer = byDemoMode<PlanProposer>(
     () => new ReplayPlanProposer(recordings),
     () => {
-      const { project, location } = readGoogleEnv(process.env);
+      const { project, location } = liveGoogleEnv();
       return new GeminiPlanProposer(createGeminiModels(project, location));
     },
     (real) => new RecordingPlanProposer(real, recordings),
@@ -95,7 +95,7 @@ export function composePlan(): PlanDependencies {
 export function composeVoice(): VoiceDependencies {
   const synthesizer = byDemoMode<VoiceSynthesizer>(
     () => new ReplayVoiceSynthesizer(recordings),
-    () => new GeminiVoiceSynthesizer(createGeminiModels(readGoogleEnv(process.env).project, TTS_LOCATION)),
+    () => new GeminiVoiceSynthesizer(createGeminiModels(liveGoogleEnv().project, TTS_LOCATION)),
     (real) => new RecordingVoiceSynthesizer(real, recordings),
   );
   return { synthesizer, cache: voiceCache, hash: sha256 };
@@ -105,7 +105,7 @@ function composeTextAdapters(): TextAdapters {
   return byDemoMode<TextAdapters>(
     () => ({ writer: new ReplayWriter(recordings), translator: new ReplayTranslator(recordings) }),
     () => {
-      const { project, location } = readGoogleEnv(process.env);
+      const { project, location } = liveGoogleEnv();
       return {
         writer: new GeminiPlainLanguageWriter(createGeminiModels(project, location)),
         translator: new CloudTranslator(new TranslationServiceClient(), project),
@@ -128,4 +128,11 @@ function byDemoMode<T>(replay: () => T, real: () => T, record: (real: T) => T): 
 function createGeminiModels(project: string, location: string): GoogleGenAI['models'] {
   // vertexai: true routes Gemini through Agent Platform (Vertex AI). https://github.com/googleapis/js-genai
   return new GoogleGenAI({ vertexai: true, project, location }).models;
+}
+
+/** Google settings for live adapters; also defaults the quota project before any client reads it. */
+function liveGoogleEnv(): GoogleEnv {
+  const env = readGoogleEnv(process.env);
+  defaultQuotaProject(process.env, env.project);
+  return env;
 }

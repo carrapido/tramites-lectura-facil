@@ -15,3 +15,13 @@ export function readGoogleEnv(source: Record<string, string | undefined>): Googl
   const env = googleEnv.parse(source);
   return { project: env.GOOGLE_CLOUD_PROJECT, location: env.GOOGLE_CLOUD_LOCATION };
 }
+
+/**
+ * User ADC carries no quota project, and Cloud Translation rejects calls without one.
+ * google-auth-library reads GOOGLE_CLOUD_QUOTA_PROJECT, so default it to the project
+ * instead of asking every teammate for an extra .env.local line; a configured value wins.
+ * https://cloud.google.com/docs/authentication/adc-troubleshooting/user-creds
+ */
+export function defaultQuotaProject(target: Record<string, string | undefined>, project: string): void {
+  if (!target.GOOGLE_CLOUD_QUOTA_PROJECT) target.GOOGLE_CLOUD_QUOTA_PROJECT = project;
+}
