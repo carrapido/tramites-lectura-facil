@@ -146,7 +146,9 @@ function useNoticeReading(silenceVoices: () => void) {
     setPhotoCount(photoNumber);
     const body = await readNoticePhoto(photo);
     if (!body.ok) {
-      setState({ step: 'failed', message: failureText(body.reason, body.seen) });
+      const message = failureText(body.reason, body.seen);
+      setState({ step: 'failed', message });
+      if (body.reason === 'no-text') speakNoText(message);
       return;
     }
     const proposal = fetchPlan(body.facts, body.category);
@@ -252,6 +254,14 @@ async function easyReadCards(facts: ReadFact[]): Promise<{ cards: EasyReadCard[]
 
 function spanishOnlyCard(fact: ReadFact): EasyReadCard {
   return { kind: fact.kind, plainSpanish: fact.text, maya: null, mayaStatus: 'unavailable', sourceQuote: fact.sourceQuote };
+}
+
+/**
+ * Team-lead exception to "audio only after a tap" (document-reading L12): the photo tap already
+ * asked for an answer, so the no-text message is read aloud. A missing Spanish voice leaves it on screen.
+ */
+function speakNoText(message: string): void {
+  speakSpanish(message).catch(() => undefined);
 }
 
 function failureText(reason: string, seen?: string): string {

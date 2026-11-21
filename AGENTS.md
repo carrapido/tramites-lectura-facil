@@ -54,7 +54,7 @@ Sources: Nielsen's 10 heuristics (https://www.nngroup.com/articles/ten-usability
 - Never require a swipe, long press, double tap or pinch. Back is always visible.
 - Targets: at least 48×48 dp, about 64 dp for primary actions, at least 8 dp between targets (https://developer.android.com/guide/topics/ui/accessibility/apps).
 - Body text at least 20 sp, system font, scales with the system setting. Never set `allowFontScaling={false}`.
-- No timing: no toasts that vanish, no auto-advance. Audio plays only from a large "Escuchar" button, never by itself. Respect reduce-motion.
+- No timing: no toasts that vanish, no auto-advance. Audio plays only from a large "Escuchar" button, never by itself. Team-lead exceptions, each answering a tap the person just made: the one-sentence camera and notification permission reasons, and the "no text in this photo" message after a photo. Respect reduce-motion.
 - Copy: sentences of 15 words or fewer, concrete verbs, "usted". "Tome una foto de su papel", not "Escanear documento".
 - Errors say what happened and the next step: "No se ve bien la foto. Tome otra con más luz."
 - Languages by their own names: "Español" and "Maaya t'aan", each with an audio sample. The choice is remembered and changed with a visible "Cambiar idioma" button.
