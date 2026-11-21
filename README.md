@@ -15,7 +15,7 @@ An inclusion tool for quick, concise reading: a phone photo of any paper (an off
    npm ci
    npm test
    ```
-4. Configure: `cp .env.example .env.local`, set your project, and add `GOOGLE_CLOUD_QUOTA_PROJECT=<same project>`. User ADC has no quota project, and Translation answers `PERMISSION_DENIED` without it (https://cloud.google.com/docs/authentication/adc-troubleshooting/user-creds). `.env.local` is git-ignored; never prefix these variables with `EXPO_PUBLIC_` (Expo inlines those into the app bundle, https://docs.expo.dev/guides/environment-variables/).
+4. Configure: `cp .env.example .env.local`, and set your project. `GOOGLE_CLOUD_QUOTA_PROJECT` is optional: user ADC has no quota project and Translation rejects calls without one, so the server defaults it to `GOOGLE_CLOUD_PROJECT` (https://cloud.google.com/docs/authentication/adc-troubleshooting/user-creds). `.env.local` is git-ignored; never prefix these variables with `EXPO_PUBLIC_` (Expo inlines those into the app bundle, https://docs.expo.dev/guides/environment-variables/).
 5. Start the dev server and scan the QR code with Expo Go:
    ```sh
    npx expo start

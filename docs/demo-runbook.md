@@ -13,7 +13,7 @@ Full script: everything in `docs/pitch.md` is merged.
 ## T-60 minutes
 
 1. `git pull && npm ci && npm test` on the demo laptop. Everything green.
-2. Credentials: `gcloud auth application-default print-access-token >/dev/null && echo ok`, and `.env.local` holds `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION` and `GOOGLE_CLOUD_QUOTA_PROJECT` (without the quota project, Translation answers `PERMISSION_DENIED`).
+2. Credentials: `gcloud auth application-default print-access-token >/dev/null && echo ok`, and `.env.local` holds `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` (the server defaults the quota project to the project).
 3. Live check: `npm start` (or `npx expo start`), then `npm run demo:warmup`. Expect five `OK` lines.
 4. If the recordings in `fixtures/demo/` are missing or stale: stop the server, run `npm run demo:record`, then `npm run demo:warmup`, then play every card's Spanish and Maya voice once and the agent sheet's "Escuchar" in the app. Commit the new recordings only if they hold fictitious data.
    Avoid tapping many voices in a burst: Gemini TTS returned 429 on about 10 rapid calls. Cached voices are free.
