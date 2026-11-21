@@ -10,17 +10,17 @@ import { theme } from '@/theme';
 
 import { loadLanguage, saveLanguage, type Language } from './language-store';
 
-/** Each language by its own name; the sample says that name aloud. */
-const LANGUAGES: { id: Language; name: string }[] = [
-  { id: 'es', name: 'Español' },
-  { id: 'yua', name: "Maaya t'aan" },
+/** Each language by its own name, tagged in that language; the sample says that name aloud. */
+const LANGUAGES: { id: Language; name: string; speechTag: string }[] = [
+  { id: 'es', name: 'Español', speechTag: 'es-MX' },
+  { id: 'yua', name: "Maaya t'aan", speechTag: 'yua' },
 ];
 
 export function LanguageScreen() {
   const [current] = useState(loadLanguage);
 
   function choose(choice: Language) {
-    saveLanguage(choice);
+    rememberOrSkip(choice);
     router.back();
   }
 
@@ -28,9 +28,9 @@ export function LanguageScreen() {
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
         <BackButton />
-        {LANGUAGES.map(({ id, name }) => (
+        {LANGUAGES.map(({ id, name, speechTag }) => (
           <View key={id} style={styles.row}>
-            <LanguageOption name={name} selected={id === current} onPress={() => choose(id)} />
+            <LanguageOption name={name} speechTag={speechTag} selected={id === current} onPress={() => choose(id)} />
             <PlayButton text={name} accessibilityLabel={`Escuchar ${name}`} />
           </View>
         ))}
@@ -39,21 +39,29 @@ export function LanguageScreen() {
   );
 }
 
+/** A failed save must not trap the person on this screen; the choice then lasts until the app closes. */
+function rememberOrSkip(choice: Language) {
+  try {
+    saveLanguage(choice);
+  } catch {
+    // Nothing to tell the person: the app keeps working in the default language.
+  }
+}
+
 interface LanguageOptionProps {
   name: string;
+  speechTag: string;
   selected: boolean;
   onPress: () => void;
 }
 
-/**
- * The name is a proper noun in its own language, so no `accessibilityLanguage` is forced on it.
- * The selected option is filled and shows a check, so color is not the only signal.
- */
-function LanguageOption({ name, selected, onPress }: LanguageOptionProps) {
+/** The selected option is filled and shows a check, so color is not the only signal. */
+function LanguageOption({ name, speechTag, selected, onPress }: LanguageOptionProps) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={name}
+      accessibilityLanguage={speechTag}
       accessibilityState={{ selected }}
       onPress={onPress}
       style={[styles.option, selected && styles.optionSelected]}
