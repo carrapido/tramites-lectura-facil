@@ -43,6 +43,18 @@ A phone photo of a Mexican government notice becomes short fact cards in plain S
 - The app calls it through `fetchEasyRead(facts)` in `src/screens/easy-read-client.ts`.
 - Label rule: every Maya sentence is shown under its Spanish, with the label "Traducción automática, sin revisar" (`MACHINE_TRANSLATION_LABEL` in `src/tramites/easy-read.ts`).
 
+## Card voice
+
+Plain Spanish is spoken by the phone (`expo-speech`, `es-MX`, offline). Yucatec Maya comes from the laptop.
+
+- `GET /api/voice?text=<maya>`: `text` is trimmed, 1 to 300 characters; anything else returns 400 `invalid-request`.
+- Success: 200 `audio/wav` with `Cache-Control: private, max-age=86400`. Missing ADC returns 503 `adc-missing`, a bad environment 500 `config-missing`, other Gemini failures 502 `upstream-failed`.
+- Model `gemini-3.8-flash-lite-tts` on location `global`, voice `Kore`. Headerless PCM from older models gets a WAV header on the server.
+- Cache: by SHA-256 of the text, in memory and in `.cache/voice/<sha256>.wav` (git-ignored). A dev-server restart reuses it; the same text is never paid twice.
+- Cost: about $0.009 per minute of audio (L2 in `odd/tasks/voice-output.md`). Yucatec Maya is not an officially supported TTS language: pronunciation is an experiment.
+- The app calls `useCardVoice()` in `src/screens/voice/use-card-voice.ts`. Nothing plays without a tap; one voice at a time.
+- Label rule: every Maya play button shows "Voz automática, sin revisar" (`MACHINE_VOICE_LABEL`).
+
 ## When the event Wi-Fi blocks phone-to-laptop traffic
 
 - Tunnel: `npx expo start --tunnel` (https://docs.expo.dev/versions/v58.0.0/more/expo-cli/).

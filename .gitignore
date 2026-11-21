@@ -41,3 +41,6 @@ example
 # generated native folders
 /ios
 /android
+
+# voice audio cache (objective voice-output)
+.cache/

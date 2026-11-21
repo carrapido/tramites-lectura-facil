@@ -60,3 +60,14 @@ export interface NoticeReading {
 export interface NoticeReader {
   read(image: NoticeImage): Promise<NoticeReading>;
 }
+
+/** Speaks a Yucatec Maya text with a machine voice; returns WAV or headerless 16-bit PCM bytes. */
+export interface VoiceSynthesizer {
+  synthesize(text: string): Promise<Uint8Array>;
+}
+
+/** Stores synthesized audio by key so the same text is never paid for twice. */
+export interface AudioCache {
+  get(key: string): Promise<Uint8Array | null>;
+  set(key: string, audio: Uint8Array): Promise<void>;
+}
