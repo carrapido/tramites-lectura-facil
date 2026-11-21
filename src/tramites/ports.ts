@@ -1,3 +1,5 @@
+import type { Category } from './category';
+
 export type LanguageCode = 'es' | 'yua';
 
 export interface TranslationRequest {
@@ -27,7 +29,7 @@ export interface BatchTranslator {
   translateAll(request: BatchTranslationRequest): Promise<string[]>;
 }
 
-/** A phone photo of a notice, base64-encoded. */
+/** A phone photo of a paper, base64-encoded. */
 export interface NoticeImage {
   base64: string;
   mimeType: 'image/jpeg' | 'image/png';
@@ -52,11 +54,13 @@ export interface Fact {
 /** What a reader saw in the photo, before the traceability check. */
 export interface NoticeReading {
   readable: boolean;
+  /** Kind of paper, judged from its context (context-categories S2). */
+  category: Category;
   transcript: string;
   facts: Fact[];
 }
 
-/** Transcribes a notice photo and extracts candidate facts. */
+/** Transcribes a paper photo, names its category and extracts candidate facts. */
 export interface NoticeReader {
   read(image: NoticeImage): Promise<NoticeReading>;
 }
@@ -93,9 +97,9 @@ export interface Plan {
   reminder: Reminder | null;
 }
 
-/** Proposes a plan from traceable facts, before the traceability and date checks. */
+/** Proposes a plan from traceable facts and the paper's category, before the traceability and date checks. */
 export interface PlanProposer {
-  propose(facts: Fact[]): Promise<Plan>;
+  propose(facts: Fact[], category: Category): Promise<Plan>;
 }
 
 /** Schedules the reminder on the phone. Called only after the person says "Sí". */

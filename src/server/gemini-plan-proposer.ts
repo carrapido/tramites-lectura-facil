@@ -9,6 +9,7 @@ import {
 } from '@google/genai';
 import { z } from 'zod';
 
+import { CATEGORY_LABEL, DEFAULT_CATEGORY, type Category } from '@/tramites/category';
 import type { Fact, Plan, PlanProposer, Reminder } from '@/tramites/ports';
 
 import { GEMINI_MODEL, type GenerateContentMessage } from './gemini-writer';
@@ -29,11 +30,12 @@ const CREATE_CHECKLIST = 'create_checklist';
 const SCHEDULE_REMINDER = 'schedule_reminder';
 
 const INSTRUCTION = [
-  'Recibes hechos de un aviso oficial mexicano en JSON. Cada hecho tiene "sourceQuote", una cita literal del aviso.',
-  `Llama a ${CREATE_CHECKLIST} con 1 a 6 cosas que la persona debe llevar o hacer.`,
+  'Recibes hechos de un papel en JSON. Cada hecho tiene "sourceQuote", una cita literal del papel.',
+  `Llama a ${CREATE_CHECKLIST} con 1 a 6 cosas que el papel pide llevar o hacer.`,
+  `Si el papel no pide llevar ni hacer nada, llama a ${CREATE_CHECKLIST} con "items" vacío.`,
   'Cada "text" es una oración en español sencillo de 15 palabras o menos que usa "usted".',
-  `Si hay una fecha límite, llama también a ${SCHEDULE_REMINDER} con la fecha en formato AAAA-MM-DD,`,
-  'un título corto como "pago del predial" y el lugar si el aviso lo dice.',
+  `Solo si el papel tiene una fecha, llama también a ${SCHEDULE_REMINDER} con la fecha en formato AAAA-MM-DD,`,
+  'un título corto como "pago del predial" o "junta de padres" y el lugar si el papel lo dice.',
   'Cada "sourceQuote" se copia exactamente de la "sourceQuote" de un hecho.',
   'Cada "text" y el recordatorio solo dice lo que dice su "sourceQuote".',
   'No agregues requisitos, adjetivos, documentos, montos ni fechas que la cita no diga.',
@@ -48,7 +50,7 @@ const quotedText = { type: Type.STRING, description: 'Fragmento copiado exactame
 const DECLARATIONS: FunctionDeclaration[] = [
   {
     name: CREATE_CHECKLIST,
-    description: 'Crea la lista de cosas que la persona debe llevar o hacer para su trámite.',
+    description: 'Crea la lista de cosas que el papel pide llevar o hacer.',
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -66,13 +68,13 @@ const DECLARATIONS: FunctionDeclaration[] = [
   },
   {
     name: SCHEDULE_REMINDER,
-    description: 'Propone un recordatorio en el teléfono para la fecha límite del trámite.',
+    description: 'Propone un recordatorio en el teléfono para la fecha que dice el papel.',
     parameters: {
       type: Type.OBJECT,
       properties: {
-        dueDate: { type: Type.STRING, description: 'Fecha límite en formato AAAA-MM-DD.' },
-        title: { type: Type.STRING, description: 'Título corto del trámite.' },
-        place: { type: Type.STRING, description: 'Lugar del trámite, si el aviso lo dice.' },
+        dueDate: { type: Type.STRING, description: 'Fecha en formato AAAA-MM-DD.' },
+        title: { type: Type.STRING, description: 'Título corto de lo que pasa en esa fecha.' },
+        place: { type: Type.STRING, description: 'Lugar, si el papel lo dice.' },
         sourceQuote: quotedText,
       },
       required: ['dueDate', 'title', 'sourceQuote'],
@@ -91,17 +93,17 @@ const reminderArgs = z.object({
   sourceQuote: z.string().trim().min(1),
 });
 
-/** Gemini proposes the plan only through the two declared tools (S1). */
+/** Gemini proposes the plan only through the two declared tools (S1), for any kind of paper (context-categories S5). */
 export class GeminiPlanProposer implements PlanProposer {
   constructor(private readonly client: FunctionCallingClient) {}
 
-  async propose(facts: Fact[]): Promise<Plan> {
+  async propose(facts: Fact[], category: Category = DEFAULT_CATEGORY): Promise<Plan> {
     const response = await withCredentialMapping(() =>
       this.client.generateContent({
         model: GEMINI_MODEL,
         contents: [{ role: 'user', parts: [{ text: JSON.stringify(facts) }] }],
         config: {
-          systemInstruction: INSTRUCTION,
+          systemInstruction: instructionFor(category),
           tools: [{ functionDeclarations: DECLARATIONS }],
           // ANY forces function calls instead of free text. https://ai.google.dev/gemini-api/docs/function-calling#function_calling_modes
           toolConfig: { functionCallingConfig: { mode: FunctionCallingConfigMode.ANY } },
@@ -112,6 +114,10 @@ export class GeminiPlanProposer implements PlanProposer {
     );
     return toPlan(response.functionCalls ?? []);
   }
+}
+
+function instructionFor(category: Category): string {
+  return `${INSTRUCTION} El papel es de la categoría "${category}" (${CATEGORY_LABEL[category]}).`;
 }
 
 /** Unknown calls are ignored; a missing create_checklist call means an empty checklist. */

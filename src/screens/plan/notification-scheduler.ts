@@ -16,7 +16,8 @@ import type { ReminderScheduler } from '@/tramites/ports';
 /** Spoken before the system permission prompt (S5). */
 export const PERMISSION_REASON = 'Para avisarle antes de la fecha, necesitamos permiso.';
 
-export const NOTIFICATION_TITLE = 'Recordatorio de su trámite';
+/** Generic, so it fits any paper (context-categories S5). */
+export const NOTIFICATION_TITLE = 'Recordatorio';
 
 /** The phone may never report the end of the voice; the prompt still appears after this. */
 const SPEECH_FALLBACK_MS = 8_000;

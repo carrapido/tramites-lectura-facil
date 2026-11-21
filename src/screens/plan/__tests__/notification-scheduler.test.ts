@@ -81,11 +81,11 @@ describe('notification scheduler (S5, S6)', () => {
     expect(contents).toEqual([
       {
         title: NOTIFICATION_TITLE,
-        body: 'Mañana vence: pago del predial. Lugar: Tesorería Municipal. Lleve este aviso.',
+        body: 'Mañana: pago del predial. Lugar: Tesorería Municipal. Lleve este aviso.',
       },
-      { title: NOTIFICATION_TITLE, body: 'Hoy vence: pago del predial. Lugar: Tesorería Municipal. Lleve este aviso.' },
+      { title: NOTIFICATION_TITLE, body: 'Hoy: pago del predial. Lugar: Tesorería Municipal. Lleve este aviso.' },
     ]);
-    expect(NOTIFICATION_TITLE).toBe('Recordatorio de su trámite');
+    expect(NOTIFICATION_TITLE).toBe('Recordatorio');
   });
 
   it('skips the moments already past', async () => {

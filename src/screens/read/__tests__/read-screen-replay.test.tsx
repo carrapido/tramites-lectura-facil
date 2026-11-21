@@ -39,7 +39,7 @@ async function takePhoto() {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.mocked(readNoticePhoto).mockResolvedValue({ ok: true, facts: FACTS });
+  jest.mocked(readNoticePhoto).mockResolvedValue({ ok: true, category: 'tramite', facts: FACTS });
   jest.mocked(fetchEasyRead).mockResolvedValue({ ok: true, cards: CARDS });
   jest.mocked(fetchPlan).mockResolvedValue({ ok: true, plan: PLAN });
   jest.mocked(useReminder).mockReturnValue({ status: 'idle', schedule: jest.fn(async () => undefined), cancelAll: jest.fn() });
@@ -47,7 +47,7 @@ beforeEach(() => {
 
 describe('ReadScreen demo replay label (easyread-pitch S5, PR #7 review W2)', () => {
   it('shows "Respuesta grabada" in Spanish above the cards when the reading was replayed', async () => {
-    jest.mocked(readNoticePhoto).mockResolvedValue({ ok: true, facts: FACTS, replayed: true });
+    jest.mocked(readNoticePhoto).mockResolvedValue({ ok: true, category: 'tramite', facts: FACTS, replayed: true });
     await takePhoto();
     await screen.findByText('Lleve este aviso.');
 

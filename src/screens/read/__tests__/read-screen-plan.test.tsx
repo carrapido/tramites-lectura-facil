@@ -35,7 +35,7 @@ async function takePhoto() {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.mocked(readNoticePhoto).mockResolvedValue({ ok: true, facts: FACTS });
+  jest.mocked(readNoticePhoto).mockResolvedValue({ ok: true, category: 'tramite', facts: FACTS });
   jest.mocked(useReminder).mockReturnValue({ status: 'idle', schedule, cancelAll: jest.fn() });
 });
 
@@ -44,7 +44,7 @@ describe('ReadScreen confirmation sheet (S10)', () => {
     jest.mocked(fetchPlan).mockResolvedValue({ ok: true, plan: PLAN });
     await takePhoto();
     expect(await screen.findByRole('button', { name: 'Sí, recuérdeme' })).toBeTruthy();
-    expect(fetchPlan).toHaveBeenCalledWith(FACTS);
+    expect(fetchPlan).toHaveBeenCalledWith(FACTS, 'tramite');
     expect(fetchEasyRead).toHaveBeenCalledWith(FACTS);
     const tree = JSON.stringify(screen.toJSON());
     expect(tree.indexOf(FACTS[0].text)).toBeLessThan(tree.indexOf('Lleve este aviso.'));

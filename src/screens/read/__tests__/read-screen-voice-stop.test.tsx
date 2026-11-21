@@ -33,7 +33,7 @@ const CARD = { kind: 'fecha', plainSpanish: 'Pague antes del 30 de noviembre.', 
 beforeEach(() => {
   order.length = 0;
   jest.mocked(createAudioPlayer).mockImplementation(() => player as AudioPlayer);
-  jest.mocked(readNoticePhoto).mockResolvedValue({ ok: true, facts: [FACT] });
+  jest.mocked(readNoticePhoto).mockResolvedValue({ ok: true, category: 'tramite', facts: [FACT] });
   jest.mocked(fetchEasyRead).mockResolvedValue({ ok: true, cards: [CARD] });
 });
 

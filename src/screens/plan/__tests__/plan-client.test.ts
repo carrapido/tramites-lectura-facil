@@ -73,3 +73,24 @@ describe('fetchPlan in demo replay (S5)', () => {
     expect(await fetchPlan(FACTS)).toEqual({ ok: true, plan: PLAN, replayed: true });
   });
 });
+
+describe('fetchPlan with the category of the paper (context-categories S5)', () => {
+  it('sends the category with the facts', async () => {
+    const fetchMock = jest.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => Response.json({ ok: true, plan: PLAN }));
+    global.fetch = fetchMock;
+
+    expect(await fetchPlan(FACTS, 'salud')).toEqual({ ok: true, plan: PLAN });
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({ facts: FACTS, category: 'salud' });
+  });
+
+  it('keeps the deadline as the last argument after the category', async () => {
+    global.fetch = jest.fn(
+      (_input: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+        }),
+    );
+
+    expect(await fetchPlan(FACTS, 'reunion', 10)).toEqual({ ok: false, reason: 'timeout' });
+  });
+});

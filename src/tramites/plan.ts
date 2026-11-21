@@ -1,3 +1,4 @@
+import { DEFAULT_CATEGORY, type Category } from './category';
 import type { ChecklistItem, Fact, Plan, PlanProposer, Reminder, ReminderScheduler } from './ports';
 import { collapseWhitespace, isQuotedIn } from './quote-match';
 import { countWords, MAX_PLAIN_WORDS } from './text-rules';
@@ -24,11 +25,15 @@ export interface ReminderTexts {
 }
 
 /**
- * Asks for a plan and keeps only what is traceable to the facts' quotes (S2)
- * and a reminder due today or later (S3).
+ * Asks for a plan for this kind of paper (context-categories S5) and keeps only what is traceable
+ * to the facts' quotes (S2) and a reminder due today or later (S3).
  */
-export async function proposePlan(facts: Fact[], { proposer, today }: PlanDependencies): Promise<Plan> {
-  const proposal = await proposer.propose(facts);
+export async function proposePlan(
+  facts: Fact[],
+  { proposer, today }: PlanDependencies,
+  category: Category = DEFAULT_CATEGORY,
+): Promise<Plan> {
+  const proposal = await proposer.propose(facts, category);
   const quotes = facts.map((fact) => collapseWhitespace(fact.sourceQuote));
   return {
     checklist: proposal.checklist.filter((item) => isReadableItem(item, quotes)).slice(0, MAX_CHECKLIST_ITEMS),
@@ -48,8 +53,8 @@ export async function executePlan(plan: Plan, answer: PlanAnswer, scheduler: Rem
 export function reminderTexts(reminder: Reminder, checklist: ChecklistItem[]): ReminderTexts {
   const details = [reminder.place && `Lugar: ${reminder.place}`, checklist[0]?.text];
   return {
-    dayBefore: toBody([`Mañana vence: ${reminder.title}`, ...details]),
-    dueDay: toBody([`Hoy vence: ${reminder.title}`, ...details]),
+    dayBefore: toBody([`Mañana: ${reminder.title}`, ...details]),
+    dueDay: toBody([`Hoy: ${reminder.title}`, ...details]),
   };
 }
 

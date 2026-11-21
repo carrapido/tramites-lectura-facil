@@ -31,7 +31,7 @@ const FACTS: Fact[] = [
   { kind: 'lugar', text: 'Vaya a la Tesorería Municipal.', sourceQuote: 'Deberá presentarse en la Tesorería Municipal' },
 ];
 
-const READING: NoticeReading = { readable: true, transcript: 'Aviso ficticio.', facts: FACTS };
+const READING: NoticeReading = { readable: true, category: 'tramite', transcript: 'Aviso ficticio.', facts: FACTS };
 
 const PLAN: Plan = {
   checklist: [{ text: 'Lleve este aviso.', sourceQuote: 'Tesorería Municipal' }],
@@ -157,7 +157,7 @@ describe('Recording decorators (S4)', () => {
 
   it('does not overwrite the recording with an unreadable reading', async () => {
     await store.saveNoticeReading(READING);
-    const reader = new RecordingNoticeReader({ read: async () => ({ readable: false, transcript: '', facts: [] }) }, store);
+    const reader = new RecordingNoticeReader({ read: async () => ({ readable: false, category: 'otro', transcript: '', facts: [] }) }, store);
 
     await reader.read(IMAGE);
 
@@ -249,5 +249,23 @@ describe('Replay adapters (S5)', () => {
     await expect(new ReplayWriter(store).toPlainSpanish('largo')).rejects.toBeInstanceOf(NotRecordedError);
     await expect(new ReplayPlanProposer(store).propose(FACTS)).rejects.toBeInstanceOf(NotRecordedError);
     await expect(new ReplayVoiceSynthesizer(store).synthesize('Maya')).rejects.toBeInstanceOf(NotRecordedError);
+  });
+});
+
+describe('Notice reading category (context-categories S2)', () => {
+  it('stores the category of the recorded reading', async () => {
+    await new RecordingNoticeReader({ read: async () => ({ ...READING, category: 'reunion' }) }, store).read(IMAGE);
+
+    expect(readJson('notice-reading.json')).toEqual(expect.objectContaining({ category: 'reunion' }));
+    expect((await new ReplayNoticeReader(store).read(IMAGE)).category).toBe('reunion');
+  });
+
+  it.each([
+    ['without a category', { readable: true, transcript: 'Aviso ficticio.', facts: FACTS }],
+    ['with an unknown category', { readable: true, category: 'banco', transcript: 'Aviso ficticio.', facts: FACTS }],
+  ])('replays an old recording %s as otro', async (_name, recording) => {
+    writeRecording('notice-reading.json', JSON.stringify(recording));
+
+    expect(await new ReplayNoticeReader(store).read(IMAGE)).toEqual({ ...READING, category: 'otro' });
   });
 });

@@ -7,6 +7,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ActionButton } from '@/components/action-button';
+import { CategoryRow } from '@/components/category-row';
 import { FactCard } from '@/components/fact-card';
 import { SecondaryButton } from '@/components/secondary-button';
 import type { VoiceControls } from '@/components/voice-controls';
@@ -15,6 +16,7 @@ import { fetchEasyRead } from '@/screens/easy-read-client';
 import { useLanguage } from '@/screens/language/language-store';
 import { fetchPlan, type PlanResult as PlanResponse } from '@/screens/plan/plan-client';
 import { useScreenVoice } from '@/screens/voice/use-screen-voice';
+import { CATEGORY_NOTICE, NOTICE_BEFORE_READING, type Category } from '@/tramites/category';
 import type { EasyReadCard } from '@/tramites/easy-read';
 import type { Plan } from '@/tramites/plan';
 import { theme } from '@/theme';
@@ -25,7 +27,7 @@ import { readNoticePhoto, type NoticePhoto, type ReadFact } from './api-client';
 type ReadState =
   | { step: 'idle' }
   | { step: 'reading' }
-  | { step: 'cards'; facts: ReadFact[]; cards: EasyReadCard[]; replayed: boolean }
+  | { step: 'cards'; category: Category; facts: ReadFact[]; cards: EasyReadCard[]; replayed: boolean }
   | { step: 'failed'; message: string };
 
 /** The agent's proposal loads after the cards and never hides them (S10). */
@@ -79,7 +81,7 @@ export function ReadScreen() {
         <ReadResult state={state} showMaya={showMaya} voice={voice} />
         <PlanResult key={photoCount} plan={plan} voice={voice} />
         <Text style={styles.notice} accessibilityLanguage="es-MX">
-          Esto no es asesoría legal
+          {noticeFor(state)}
         </Text>
         <SecondaryButton
           label="Cambiar idioma"
@@ -139,9 +141,10 @@ function useNoticeReading(silenceVoices: () => void) {
       setState({ step: 'failed', message: failureText(body.reason) });
       return;
     }
-    const proposal = fetchPlan(body.facts);
+    const proposal = fetchPlan(body.facts, body.category);
     const easyRead = await easyReadCards(body.facts);
-    setState({ step: 'cards', facts: body.facts, cards: easyRead.cards, replayed: body.replayed === true || easyRead.replayed });
+    const replayed = body.replayed === true || easyRead.replayed;
+    setState({ step: 'cards', category: body.category, facts: body.facts, cards: easyRead.cards, replayed });
     setPlan({ step: 'loading' });
     // Not awaited: the camera is free again while the plan loads (PR #7 review W3).
     void showPlan(proposal, photoNumber);
@@ -247,6 +250,11 @@ function isReplayed(state: ReadState, plan: PlanState): boolean {
   return cardsReplayed || planReplayed;
 }
 
+/** The notice for the paper just read; before any reading, the generic one (context-categories S4). */
+function noticeFor(state: ReadState): string {
+  return state.step === 'cards' ? CATEGORY_NOTICE[state.category] : NOTICE_BEFORE_READING;
+}
+
 /** Plain words, not only a color, so a recorded answer is never taken for a live one. */
 function ReplayLabel() {
   return (
@@ -274,6 +282,7 @@ function ReadResult({ state, showMaya, voice }: ReadResultProps) {
   if (state.step === 'cards') {
     return (
       <View style={styles.facts}>
+        <CategoryRow category={state.category} />
         {state.cards.map((card, index) => (
           <FactCard
             key={`${card.kind}:${card.sourceQuote}`}

@@ -61,6 +61,7 @@ export class ReplayVoiceSynthesizer implements VoiceSynthesizer {
 export class ReplayPlanProposer implements PlanProposer {
   constructor(private readonly store: DemoRecordings) {}
 
+  /** The recording is keyed by the facts alone; the category comes from the same paper. */
   async propose(facts: Fact[]): Promise<Plan> {
     return recordedOrThrow(await this.store.plan(facts), 'a plan');
   }

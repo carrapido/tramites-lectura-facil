@@ -130,6 +130,47 @@ describe('POST /api/plan (S1-S3)', () => {
   });
 });
 
+describe('POST /api/plan category (context-categories S5)', () => {
+  function recordingProposer(): PlanProposer & { categories: unknown[] } {
+    const categories: unknown[] = [];
+    return {
+      categories,
+      propose: async (_facts, category) => {
+        categories.push(category);
+        return PROPOSAL;
+      },
+    };
+  }
+
+  it('passes the category of the paper to the proposer', async () => {
+    const proposer = recordingProposer();
+
+    const response = await handlePlan(post({ facts: FACTS, category: 'salud' }), composeWith(proposer));
+
+    expect(response.status).toBe(200);
+    expect(proposer.categories).toEqual(['salud']);
+  });
+
+  it('uses otro when the category is absent', async () => {
+    const proposer = recordingProposer();
+
+    await handlePlan(post({ facts: FACTS }), composeWith(proposer));
+
+    expect(proposer.categories).toEqual(['otro']);
+  });
+
+  it('rejects an unknown category with 400 invalid-request', async () => {
+    const proposer = recordingProposer();
+    const compose = composeWith(proposer);
+
+    const response = await handlePlan(post({ facts: FACTS, category: 'banco' }), compose);
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ ok: false, reason: 'invalid-request' });
+    expect(compose).not.toHaveBeenCalled();
+  });
+});
+
 describe('localDateIn (S3 clock)', () => {
   it('returns the calendar date in Mérida, not in UTC', () => {
     expect(localDateIn('America/Merida', new Date('2026-11-30T03:00:00Z'))).toBe('2026-11-29');
