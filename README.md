@@ -1,56 +1,46 @@
-# Welcome to your Expo app 👋
+# Trámites en lectura fácil
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A phone photo of a Mexican government notice becomes short fact cards in plain Spanish and Yucatec Maya, with voice. Hackathon project. Specs and progress live in [`odd/`](odd/objectives.md).
 
-## Get started
+## Run it in 15 minutes (macOS or Linux)
 
-1. Install dependencies
-
-   ```bash
-   npm install
+1. Node 24 (`nvm use` reads `.nvmrc`) and the Expo Go app on your phone.
+2. Google credentials on the laptop, no API keys:
+   ```sh
+   gcloud auth application-default login
    ```
-
-2. Start the app
-
-   ```bash
+   https://cloud.google.com/docs/authentication/provide-credentials-adc
+3. Install and test:
+   ```sh
+   npm ci
+   npm test
+   ```
+4. Configure: `cp .env.example .env.local` and set your project. `.env.local` is git-ignored; never prefix these variables with `EXPO_PUBLIC_` (Expo inlines those into the app bundle, https://docs.expo.dev/guides/environment-variables/).
+5. Start the dev server and scan the QR code with Expo Go:
+   ```sh
    npx expo start
    ```
+   The screen shows "conectado" when the phone reaches `GET /api/health` on the laptop. "Probar Google" calls `GET /api/smoke` (Gemini + Cloud Translation).
 
-In the output, you'll find options to open the app in a
+## When the event Wi-Fi blocks phone-to-laptop traffic
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Tunnel: `npx expo start --tunnel` (https://docs.expo.dev/versions/v58.0.0/more/expo-cli/).
+- Or turn on the phone's hotspot, connect the laptop to it and run `npx expo start` again.
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Layout
 
-## Get a fresh project
+- `src/app/`: routes only. API routes (`+api.ts`) under `src/app/api/` run on the laptop dev server.
+- `src/screens/`, `src/components/`: UI.
+- `src/tramites/`: domain and ports. No Google, Expo or React Native imports (an architecture test enforces it).
+- `src/server/`: Google adapters and composition, server-only.
 
-When you're ready, run:
+## How Expo maps to what you know
 
-```bash
-npm run reset-project
-```
+- `+api.ts` files compare to Next.js route handlers: export `GET(request)` and return a `Response`.
+- Expo Router compares to the Next.js App Router: files in `src/app/` are screens, `_layout.tsx` is a layout.
+- Metro is the bundler (like webpack/Turbopack); it also bundles the API routes for the dev server.
+- Expo Go is a prebuilt native runtime from the store that downloads and runs our JS bundle. Only native modules bundled in Expo Go work.
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+## Credits
 
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+unslop skill in `.agents/skills/unslop` by Damir Sokolovsky, CC BY 4.0 (https://github.com/heydamir/unslop).
