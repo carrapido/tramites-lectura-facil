@@ -1,5 +1,5 @@
 ---
-status: done
+status: in-progress
 owner: carrapido
 ---
 
@@ -20,6 +20,9 @@ Text input, new screens, voice changes for Maya beyond sharing the route.
 - **S3 (Spanish voice):** every Spanish sentence the app speaks (cards, the agent's proposal, the camera and notification permission reasons, the language sample) uses a real Spanish voice: Gemini TTS on the laptop through `GET /api/voice?text=…&lang=es`, cached on disk like the Maya voice. Maya keeps `lang=yua` (the default for old callers).
 - **S4 (fallback):** if the laptop voice fails or takes longer than a short deadline, the phone speaks with `expo-speech` using an installed Spanish voice chosen explicitly (`es-MX`, then `es-US`, `es-419`, then any `es-*`), never the default voice; if the phone has no Spanish voice, it shows the sentence on screen instead of speaking it with another language's voice.
 - **S5:** audio still plays only after a tap, one voice at a time; the Maya label "Voz automática, sin revisar" stays on Maya only.
+- **S6 (voice loading):** while a voice is being prepared (the laptop voice is loading, before it plays), its "Escuchar" button shows an animated loading symbol inside the button next to the words, and the button says what is happening ("Preparando la voz."); with reduce motion on, a still symbol. The same applies to the Maya voice, the language samples and the agent's "Escuchar".
+- **S7 (press feedback):** every button gives an immediate visual response to a tap (a short press-in scale and opacity change, about 100 to 150 ms, released on press-out), so the person sees the tap registered; with reduce motion on, only an opacity or color change, no scaling. No haptics required; no swipe, long press or double tap.
+- **S8 (busy is obvious):** while any action is in progress, the button that started it stays visibly busy (loading symbol plus words) and disabled, so nobody taps twice wondering if it worked.
 
 ## Log
 
@@ -35,3 +38,4 @@ Text input, new screens, voice changes for Maya beyond sharing the route.
 - **L5 (integration, parent):** with both workers' changes, 2 tests pinned the superseded objective 5 S1: `read-screen-cards.test.tsx` "plays one voice at a time…" (assertion changed from `Speech.speak(…, es-MX)` to the laptop player URL with `lang=es`) and `read-screen-language-voice.test.tsx` (setup only: mock `speakSpanish` for the camera reason). Full suite 62 suites / 456 tests; tsc and lint clean.
 - **L6 (S3 real smoke):** `GET /api/voice?lang=es` → 200 `audio/wav`, 6.4 s 24 kHz mono, in 7.1 s; second call identical from cache in 0.58 s; `lang=en` → 400. Played on the laptop. Demo recordings: Spanish voices for the notice cards plus the three fixed phrases recorded (`fixtures/demo/voice` now 20 files, 6.5 MB). Finding: a burst of about 10 TTS calls hit `429 RESOURCE_EXHAUSTED`; retried one every 10 s and all succeeded. On stage, fast repeated taps could hit 429; the phone Spanish voice fallback (S4) covers it, and the disk cache avoids repeats.
 - **Pending (phone):** hear the Spanish voice on the phone, the rear camera on Android and iPhone (Android may ignore `cameraType` on some devices), the spinner and reduce-motion icon, and the fallback with the laptop unreachable.
+- **L7 (user, verbatim):** "agrega igual un simbolo con animacion de carga cuando esten cargando las voces, ademas de eso agrega animaciones de click y que el usuario se de cuenta que esta cargan pero antes checa los pr" — PRs checked first: #9–#13 open, mergeable, no reviews yet. Specs S6–S8 added from this request. Branch `feat/motion-feedback`, stacked on #13.
