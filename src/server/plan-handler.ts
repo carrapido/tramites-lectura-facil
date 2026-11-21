@@ -1,6 +1,7 @@
 import { proposePlan, type PlanDependencies } from '@/tramites/plan';
 
 import { composeOrNull } from './compose-or-null';
+import { replayedField } from './demo-mode';
 import { factsRequestSchema } from './fact-schema';
 import { configMissingResponse, googleFailureResponse } from './failure-response';
 import { declaresOversizedBody, invalidRequestResponse, jsonOrNull } from './request-body';
@@ -9,7 +10,7 @@ import { declaresOversizedBody, invalidRequestResponse, jsonOrNull } from './req
 const MAX_REQUEST_BYTES = 64 * 1024;
 
 /** POST /api/plan: traceable facts in, a traceable checklist and reminder out (S1-S3). Nothing is scheduled here. */
-export async function handlePlan(request: Request, compose: () => PlanDependencies): Promise<Response> {
+export async function handlePlan(request: Request, compose: () => PlanDependencies, replayed = false): Promise<Response> {
   if (declaresOversizedBody(request, MAX_REQUEST_BYTES)) return invalidRequestResponse();
   const body = factsRequestSchema.safeParse(await jsonOrNull(request));
   if (!body.success) return invalidRequestResponse();
@@ -19,7 +20,7 @@ export async function handlePlan(request: Request, compose: () => PlanDependenci
 
   try {
     const plan = await proposePlan(body.data.facts, dependencies);
-    return Response.json({ ok: true, plan });
+    return Response.json({ ok: true, plan, ...replayedField(replayed) });
   } catch (error) {
     return googleFailureResponse(error, 'plan');
   }

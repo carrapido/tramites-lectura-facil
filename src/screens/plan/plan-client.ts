@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { postJson, serverReason, type ClientFailure } from '@/screens/post-json';
+import { postJson, replayedFlag, serverReason, type ClientFailure } from '@/screens/post-json';
 import type { Plan } from '@/tramites/plan';
 import type { Fact } from '@/tramites/ports';
 
@@ -9,7 +9,8 @@ export const PLAN_DEADLINE_MS = 30_000;
 
 export type PlanFailure = ClientFailure;
 
-export type PlanResult = { ok: true; plan: Plan } | { ok: false; reason: PlanFailure };
+/** `replayed: true` means a demo recording answered: show REPLAY_LABEL. */
+export type PlanResult = { ok: true; plan: Plan; replayed?: boolean } | { ok: false; reason: PlanFailure };
 
 const plan = z.object({
   checklist: z.array(z.object({ text: z.string(), sourceQuote: z.string() })),
@@ -19,7 +20,7 @@ const plan = z.object({
 });
 
 const planBody = z.discriminatedUnion('ok', [
-  z.object({ ok: z.literal(true), plan }),
+  z.object({ ok: z.literal(true), plan, replayed: replayedFlag }),
   z.object({ ok: z.literal(false), reason: serverReason }),
 ]);
 

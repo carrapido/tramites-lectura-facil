@@ -36,6 +36,19 @@ export class FileAudioCache implements AudioCache {
   }
 }
 
+/** Memory only: demo modes keep `.cache/voice` out of the way, so recording and replay see every voice request. */
+export class MemoryAudioCache implements AudioCache {
+  private readonly memory = new Map<string, Uint8Array>();
+
+  async get(key: string): Promise<Uint8Array | null> {
+    return this.memory.get(key) ?? null;
+  }
+
+  async set(key: string, audio: Uint8Array): Promise<void> {
+    this.memory.set(key, audio);
+  }
+}
+
 /** A missing or unreadable file is a cache miss. */
 async function readOrNull(file: string): Promise<Uint8Array | null> {
   try {

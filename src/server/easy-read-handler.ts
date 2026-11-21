@@ -1,6 +1,7 @@
 import { toEasyReadCards, type EasyReadDependencies } from '@/tramites/easy-read';
 
 import { composeOrNull } from './compose-or-null';
+import { replayedField } from './demo-mode';
 import { factsRequestSchema } from './fact-schema';
 import { configMissingResponse, googleFailureResponse } from './failure-response';
 import { declaresOversizedBody, invalidRequestResponse, jsonOrNull } from './request-body';
@@ -9,7 +10,7 @@ import { declaresOversizedBody, invalidRequestResponse, jsonOrNull } from './req
 const MAX_REQUEST_BYTES = 64 * 1024;
 
 /** POST /api/easy-read: traceable facts in, plain Spanish and Maya cards out (S1-S5). */
-export async function handleEasyRead(request: Request, compose: () => EasyReadDependencies): Promise<Response> {
+export async function handleEasyRead(request: Request, compose: () => EasyReadDependencies, replayed = false): Promise<Response> {
   if (declaresOversizedBody(request, MAX_REQUEST_BYTES)) return invalidRequestResponse();
   const body = factsRequestSchema.safeParse(await jsonOrNull(request));
   if (!body.success) return invalidRequestResponse();
@@ -19,7 +20,7 @@ export async function handleEasyRead(request: Request, compose: () => EasyReadDe
 
   try {
     const cards = await toEasyReadCards(body.data.facts, dependencies);
-    return Response.json({ ok: true, cards });
+    return Response.json({ ok: true, cards, ...replayedField(replayed) });
   } catch (error) {
     return googleFailureResponse(error, 'easy-read');
   }

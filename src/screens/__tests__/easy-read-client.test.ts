@@ -78,3 +78,15 @@ describe('fetchEasyRead (S6)', () => {
     expect(signal?.aborted).toBe(true);
   });
 });
+
+describe('fetchEasyRead in demo replay (S5)', () => {
+  it('passes replayed: true through', async () => {
+    global.fetch = jest.fn(async () => Response.json({ ok: true, cards: CARDS, replayed: true }));
+    expect(await fetchEasyRead(FACTS)).toEqual({ ok: true, cards: CARDS, replayed: true });
+  });
+
+  it('passes not-recorded through so the app can explain it', async () => {
+    global.fetch = jest.fn(async () => Response.json({ ok: false, reason: 'not-recorded' }, { status: 404 }));
+    expect(await fetchEasyRead(FACTS)).toEqual({ ok: false, reason: 'not-recorded' });
+  });
+});
