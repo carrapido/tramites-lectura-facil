@@ -69,7 +69,7 @@ function LanguageSample({ id, name, voice }: { id: Language; name: string; voice
           {MACHINE_VOICE_LABEL}
         </Text>
       ) : null}
-      {voice.failed(id) ? (
+      {id === 'yua' && voice.failed(id) ? (
         <Text style={styles.error} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
           {MAYA_VOICE_FAILED}
         </Text>

@@ -27,12 +27,15 @@ function memoryCache(): AudioCache {
   };
 }
 
-function synthesizer(answer: () => Promise<Uint8Array>): VoiceSynthesizer & { texts: string[] } {
+function synthesizer(answer: () => Promise<Uint8Array>): VoiceSynthesizer & { texts: string[]; languages: unknown[] } {
   const texts: string[] = [];
+  const languages: unknown[] = [];
   return {
     texts,
-    synthesize: (text) => {
+    languages,
+    synthesize: (text, language) => {
       texts.push(text);
+      languages.push(language);
       return answer();
     },
   };
@@ -128,5 +131,68 @@ describe('GET /api/voice (S2, S3, S4)', () => {
 
     expect(response.status).toBe(502);
     expect(await response.json()).toEqual({ ok: false, reason: 'upstream-failed' });
+  });
+});
+
+const SPANISH = 'Pague antes del 30 de noviembre.';
+
+describe('GET /api/voice with lang (field-feedback S3)', () => {
+  it('speaks Spanish with lang=es and caches it under the hash of "es:<text>"', async () => {
+    const voice = synthesizer(async () => PCM);
+    const cache = memoryCache();
+
+    const response = await handleVoice(get(`${voiceQuery(SPANISH)}&lang=es`), () => dependencies(voice, cache));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toBe('audio/wav');
+    expect(voice.texts).toEqual([SPANISH]);
+    expect(voice.languages).toEqual(['es']);
+    expect(await cache.get(`h:es:${SPANISH}`)).not.toBeNull();
+    expect(await cache.get(`h:${SPANISH}`)).toBeNull();
+  });
+
+  it('keeps Maya as the default language for old callers without lang', async () => {
+    const voice = synthesizer(async () => PCM);
+
+    await handleVoice(get(voiceQuery(MAYA)), () => dependencies(voice));
+    await handleVoice(get(`${voiceQuery(MAYA)}&lang=yua`), () => dependencies(voice));
+
+    expect(voice.languages).toEqual(['yua', 'yua']);
+  });
+
+  it('serves an old Maya cache entry, keyed by the text alone, without synthesizing', async () => {
+    const voice = synthesizer(async () => PCM);
+    const cache = memoryCache();
+    const recorded = new Uint8Array([82, 73, 70, 70, 0, 0, 0, 0, 87, 65, 86, 69]);
+    await cache.set(`h:${MAYA}`, recorded);
+
+    const response = await handleVoice(get(`${voiceQuery(MAYA)}&lang=yua`), () => dependencies(voice, cache));
+
+    expect(Array.from(new Uint8Array(await response.arrayBuffer()))).toEqual(Array.from(recorded));
+    expect(voice.texts).toEqual([]);
+  });
+
+  it('never serves the Maya audio of a text for its Spanish voice', async () => {
+    const voice = synthesizer(async () => PCM);
+    const shared = dependencies(voice);
+
+    await handleVoice(get(voiceQuery(SPANISH)), () => shared);
+    await handleVoice(get(`${voiceQuery(SPANISH)}&lang=es`), () => shared);
+
+    expect(voice.languages).toEqual(['yua', 'es']);
+  });
+
+  it.each([
+    ['an unknown language', 'fr'],
+    ['an empty language', ''],
+    ['an upper-case language', 'ES'],
+  ])('rejects %s with 400 invalid-request', async (_name, lang) => {
+    const compose = jest.fn(() => dependencies(failing(new Error('unused'))));
+
+    const response = await handleVoice(get(`${voiceQuery(SPANISH)}&lang=${lang}`), compose);
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ ok: false, reason: 'invalid-request' });
+    expect(compose).not.toHaveBeenCalled();
   });
 });

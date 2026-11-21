@@ -6,7 +6,7 @@ import * as Speech from 'expo-speech';
 import { loadLanguage, saveLanguage } from '@/screens/language/language-store';
 import { LanguageScreen } from '@/screens/language/language-screen';
 
-jest.mock('expo-speech', () => ({ speak: jest.fn(), stop: jest.fn() }));
+jest.mock('expo-speech', () => ({ speak: jest.fn(), stop: jest.fn(), getAvailableVoicesAsync: jest.fn(async () => []) }));
 jest.mock('expo-router', () => ({ router: { canGoBack: () => true, back: jest.fn(), replace: jest.fn() } }));
 jest.mock('@/screens/language/language-store', () => ({
   loadLanguage: jest.fn(() => 'es'),
@@ -41,7 +41,7 @@ describe('LanguageScreen (S4)', () => {
     expect(Speech.speak).not.toHaveBeenCalled();
     expect(createAudioPlayer).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByRole('button', { name: 'Escuchar Español' }));
-    expect(Speech.speak).toHaveBeenCalledWith('Español', expect.objectContaining({ language: 'es-MX' }));
+    expect(createAudioPlayer).toHaveBeenCalledWith({ uri: expect.stringMatching(/\/api\/voice\?text=Espa%C3%B1ol&lang=es$/) });
     await fireEvent.press(screen.getByRole('button', { name: "Escuchar Maaya t'aan" }));
     expect(createAudioPlayer).toHaveBeenCalledWith({ uri: expect.stringContaining('/api/voice?text=') });
     expect(screen.getByText('Voz automática, sin revisar')).toBeTruthy();

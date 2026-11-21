@@ -1,4 +1,4 @@
-import type { AudioCache, VoiceSynthesizer } from './ports';
+import type { AudioCache, LanguageCode, VoiceSynthesizer } from './ports';
 
 /** The UI shows this next to every Maya play button (S5). */
 export const MACHINE_VOICE_LABEL = 'Voz automática, sin revisar';
@@ -14,14 +14,31 @@ export interface VoiceDependencies {
 }
 
 /** Returns the Maya voice for a text as WAV, synthesizing it only on a cache miss (S3, S4). */
-export async function getMayaVoice(text: string, { synthesizer, cache, hash }: VoiceDependencies): Promise<Uint8Array> {
-  const key = hash(text);
+export function getMayaVoice(text: string, dependencies: VoiceDependencies): Promise<Uint8Array> {
+  return getVoice(text, 'yua', dependencies);
+}
+
+/** Returns the voice for a text in one language as WAV, synthesizing it only on a cache miss (field-feedback S3). */
+export async function getVoice(
+  text: string,
+  language: LanguageCode,
+  { synthesizer, cache, hash }: VoiceDependencies,
+): Promise<Uint8Array> {
+  const key = hash(voiceKeyText(text, language));
   const cached = await cache.get(key);
   if (cached) return cached;
 
-  const audio = ensureWav(await synthesizer.synthesize(text));
+  const audio = ensureWav(await synthesizer.synthesize(text, language));
   await cache.set(key, audio);
   return audio;
+}
+
+/**
+ * What gets hashed into a voice key. Maya keeps the text alone, so every audio cached or
+ * recorded before Spanish existed still hits; Spanish is prefixed, so it never gets Maya audio.
+ */
+export function voiceKeyText(text: string, language: LanguageCode): string {
+  return language === 'yua' ? text : `${language}:${text}`;
 }
 
 /** Legacy Gemini TTS models return headerless PCM: 16-bit, mono, 24 kHz. */

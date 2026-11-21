@@ -2,6 +2,7 @@ import type {
   BatchTranslationRequest,
   BatchTranslator,
   Fact,
+  LanguageCode,
   NoticeImage,
   NoticeReader,
   NoticeReading,
@@ -53,8 +54,8 @@ export class ReplayWriter implements PlainLanguageWriter {
 export class ReplayVoiceSynthesizer implements VoiceSynthesizer {
   constructor(private readonly store: DemoRecordings) {}
 
-  async synthesize(text: string): Promise<Uint8Array> {
-    return recordedOrThrow(await this.store.voice(text), 'a voice');
+  async synthesize(text: string, language: LanguageCode = 'yua'): Promise<Uint8Array> {
+    return recordedOrThrow(await this.store.voice(text, language), 'a voice');
   }
 }
 

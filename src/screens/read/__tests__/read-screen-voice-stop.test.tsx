@@ -11,6 +11,11 @@ const order: string[] = [];
 const player = fakeAudioPlayer((name) => order.push(name));
 
 jest.mock('expo-audio', () => ({ createAudioPlayer: jest.fn() }));
+jest.mock('@/screens/voice/speak-spanish', () => ({
+  speakSpanish: jest.fn(async (text: string) => {
+    order.push(`speak:${text}`);
+  }),
+}));
 jest.mock('expo-speech', () => ({
   speak: jest.fn((text: string, options?: { onDone?: () => void }) => {
     order.push(`speak:${text}`);
@@ -19,6 +24,7 @@ jest.mock('expo-speech', () => ({
   stop: jest.fn(async () => undefined),
 }));
 jest.mock('expo-image-picker', () => ({
+  CameraType: { back: 'back', front: 'front' },
   requestCameraPermissionsAsync: jest.fn(async () => ({ granted: true })),
   launchCameraAsync: jest.fn(async () => ({ canceled: false, assets: [{ base64: 'QUJD', width: 800 }] })),
 }));

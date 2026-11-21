@@ -2,13 +2,18 @@ import { act, renderHook } from '@testing-library/react-native';
 import { createAudioPlayer, type AudioEvents, type AudioPlayer, type AudioStatus } from 'expo-audio';
 import * as Speech from 'expo-speech';
 
+import { spanishPhoneVoice } from '@/screens/voice/phone-spanish-voice';
 import { MACHINE_VOICE_LABEL, useCardVoice } from '@/screens/voice/use-card-voice';
-import { mayaVoiceUrl } from '@/screens/voice/voice-url';
+import { mayaVoiceUrl, voiceUrl } from '@/screens/voice/voice-url';
 
 jest.mock('expo-speech', () => ({
   speak: jest.fn(),
   stop: jest.fn(async () => undefined),
+  VoiceQuality: { Default: 'Default', Enhanced: 'Enhanced' },
 }));
+
+/** The phone voice lookup remembers its answer per session, so each test sets it here. */
+jest.mock('@/screens/voice/phone-spanish-voice', () => ({ spanishPhoneVoice: jest.fn() }));
 
 jest.mock('expo-audio', () => ({ createAudioPlayer: jest.fn() }));
 
@@ -66,7 +71,22 @@ beforeEach(() => {
   jest.clearAllMocks();
   player = fakePlayer();
   jest.mocked(createAudioPlayer).mockImplementation(() => player as AudioPlayer);
+  jest.mocked(spanishPhoneVoice).mockResolvedValue(MEXICAN_VOICE);
 });
+
+const MEXICAN_VOICE: Speech.Voice = {
+  identifier: 'es-mx-voice',
+  name: 'Paulina',
+  quality: Speech.VoiceQuality.Default,
+  language: 'es-MX',
+};
+
+/** The next player cannot be created: the laptop voice fails at once. */
+function laptopUnreachableOnce(): void {
+  jest.mocked(createAudioPlayer).mockImplementationOnce(() => {
+    throw new Error('laptop unreachable');
+  });
+}
 
 function lastSpeechOptions(): Speech.SpeechOptions | undefined {
   return jest.mocked(Speech.speak).mock.calls.at(-1)?.[1];
@@ -93,16 +113,19 @@ describe('useCardVoice (S1, S5, S6)', () => {
     expect(createAudioPlayer).not.toHaveBeenCalled();
   });
 
-  it('speaks Spanish with the phone voice in es-MX and returns to idle when done (S1)', async () => {
+  it('speaks Spanish with the laptop Spanish voice: loading, playing, then idle (field-feedback S3)', async () => {
     const { result } = await renderHook(() => useCardVoice());
 
     await act(() => result.current.speakSpanish(SPANISH));
 
-    expect(Speech.speak).toHaveBeenCalledWith(SPANISH, expect.objectContaining({ language: 'es-MX' }));
-    expect(createAudioPlayer).not.toHaveBeenCalled();
+    expect(createAudioPlayer).toHaveBeenCalledWith({ uri: voiceUrl(SPANISH, 'es') });
+    expect(Speech.speak).not.toHaveBeenCalled();
+    expect(result.current.status).toBe('loading');
+
+    await act(() => player.emit({ playing: true }));
     expect(result.current.status).toBe('playing');
 
-    await act(() => lastSpeechOptions()?.onDone?.());
+    await act(() => player.emit({ playing: false, didJustFinish: true }));
     expect(result.current.status).toBe('idle');
   });
 
@@ -136,7 +159,8 @@ describe('useCardVoice (S1, S5, S6)', () => {
     const { result } = await renderHook(() => useCardVoice());
 
     await act(() => result.current.playMaya(MAYA));
-    await act(() => result.current.speakSpanish(SPANISH));
+    laptopUnreachableOnce();
+    await act(async () => result.current.speakSpanish(SPANISH));
 
     expect(jest.mocked(Speech.speak).mock.calls.map(([text]) => text)).toEqual([SPANISH]);
   });
@@ -149,7 +173,7 @@ describe('useCardVoice (S1, S5, S6)', () => {
 
     expect(player.pause).toHaveBeenCalled();
     expect(player.remove).toHaveBeenCalled();
-    expect(Speech.speak).toHaveBeenCalledTimes(1);
+    expect(createAudioPlayer).toHaveBeenLastCalledWith({ uri: voiceUrl(SPANISH, 'es') });
   });
 
   it('stop() stops both voices and returns to idle (S6)', async () => {
@@ -166,7 +190,8 @@ describe('useCardVoice (S1, S5, S6)', () => {
 
   it('ignores the stopped Spanish callback after Maya starts', async () => {
     const { result } = await renderHook(() => useCardVoice());
-    await act(() => result.current.speakSpanish(SPANISH));
+    laptopUnreachableOnce();
+    await act(async () => result.current.speakSpanish(SPANISH));
     const spanishOptions = lastSpeechOptions();
 
     await act(() => result.current.playMaya(MAYA));
@@ -186,8 +211,8 @@ describe('useCardVoice (S1, S5, S6)', () => {
     expect(player.remove).toHaveBeenCalled();
 
     await act(() => result.current.speakSpanish(SPANISH));
-    expect(Speech.speak).toHaveBeenCalledWith(SPANISH, expect.objectContaining({ language: 'es-MX' }));
-    expect(result.current.status).toBe('playing');
+    expect(createAudioPlayer).toHaveBeenLastCalledWith({ uri: voiceUrl(SPANISH, 'es') });
+    expect(result.current.status).toBe('loading');
     expect(result.current.reason).toBeUndefined();
   });
 
@@ -210,5 +235,52 @@ describe('useCardVoice (S1, S5, S6)', () => {
     await unmount();
 
     expect(player.remove).toHaveBeenCalled();
+  });
+
+  it('falls back to the phone Spanish voice: playing, then idle (field-feedback S4)', async () => {
+    const { result } = await renderHook(() => useCardVoice());
+    laptopUnreachableOnce();
+
+    await act(async () => result.current.speakSpanish(SPANISH));
+
+    expect(Speech.speak).toHaveBeenCalledWith(SPANISH, expect.objectContaining({ voice: 'es-mx-voice', language: 'es-MX' }));
+    expect(result.current.status).toBe('playing');
+
+    await act(() => lastSpeechOptions()?.onDone?.());
+    expect(result.current.status).toBe('idle');
+  });
+
+  it('reports an error only when the laptop and the phone Spanish voices both fail (field-feedback S4)', async () => {
+    jest.mocked(spanishPhoneVoice).mockResolvedValue(null);
+    const { result } = await renderHook(() => useCardVoice());
+    laptopUnreachableOnce();
+
+    await act(async () => result.current.speakSpanish(SPANISH));
+
+    expect(Speech.speak).not.toHaveBeenCalled();
+    expect(result.current.status).toBe('error');
+  });
+
+  it('stop() releases the laptop Spanish player and returns to idle', async () => {
+    const { result } = await renderHook(() => useCardVoice());
+    await act(() => result.current.speakSpanish(SPANISH));
+
+    await act(() => result.current.stop());
+
+    expect(player.remove).toHaveBeenCalled();
+    expect(result.current.status).toBe('idle');
+  });
+
+  it('playMaya releases the laptop Spanish player first: one voice at a time (field-feedback S5)', async () => {
+    const spanishPlayer = fakePlayer();
+    jest.mocked(createAudioPlayer).mockImplementationOnce(() => spanishPlayer as AudioPlayer);
+    const { result } = await renderHook(() => useCardVoice());
+    await act(() => result.current.speakSpanish(SPANISH));
+
+    await act(() => result.current.playMaya(MAYA));
+
+    expect(spanishPlayer.remove).toHaveBeenCalled();
+    expect(createAudioPlayer).toHaveBeenLastCalledWith({ uri: mayaVoiceUrl(MAYA) });
+    expect(result.current.status).toBe('loading');
   });
 });

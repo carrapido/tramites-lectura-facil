@@ -190,6 +190,16 @@ describe('Recording decorators (S4)', () => {
     expect(Array.from(recorded.slice(44))).toEqual(Array.from(PCM));
   });
 
+  it('stores a Spanish voice apart from the Maya voice of the same text (field-feedback S3)', async () => {
+    const voice = new RecordingVoiceSynthesizer({ synthesize: async () => PCM }, store);
+
+    await voice.synthesize('Hola', 'es');
+
+    expect(readdirSync(join(scratch, 'demo', 'voice'))).toEqual([`${sha256('es:Hola')}.wav`]);
+    expect(await store.voice('Hola', 'es')).not.toBeNull();
+    expect(await store.voice('Hola')).toBeNull();
+  });
+
   it('stores the plan for the facts', async () => {
     const proposer = new RecordingPlanProposer({ propose: async () => PLAN }, store);
 
@@ -223,6 +233,14 @@ describe('Replay adapters (S5)', () => {
     expect(await new ReplayWriter(store).toPlainSpanish('largo')).toBe('Corto.');
     expect(await new ReplayPlanProposer(store).propose(FACTS)).toEqual(PLAN);
     expect(Array.from(await new ReplayVoiceSynthesizer(store).synthesize('Maya'))).toEqual([82, 73, 70, 70]);
+  });
+
+  it('replay a recorded Spanish voice and refuse an unrecorded one (field-feedback S3)', async () => {
+    await store.saveVoice('Hola', new Uint8Array([82, 73, 70, 70]), 'es');
+    await store.saveVoice('Maya', new Uint8Array([1]));
+
+    expect(Array.from(await new ReplayVoiceSynthesizer(store).synthesize('Hola', 'es'))).toEqual([82, 73, 70, 70]);
+    await expect(new ReplayVoiceSynthesizer(store).synthesize('Maya', 'es')).rejects.toBeInstanceOf(NotRecordedError);
   });
 
   it('return the single recorded plan for any facts', async () => {

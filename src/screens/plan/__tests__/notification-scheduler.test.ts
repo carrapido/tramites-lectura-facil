@@ -1,6 +1,5 @@
 import { PermissionStatus } from 'expo';
 import * as Notifications from 'expo-notifications';
-import * as Speech from 'expo-speech';
 
 import {
   NOTIFICATION_TITLE,
@@ -9,9 +8,13 @@ import {
   cancelAllReminders,
   createNotificationScheduler,
 } from '@/screens/plan/notification-scheduler';
+import { NoSpanishVoiceError, speakSpanish } from '@/screens/voice/speak-spanish';
 import type { Reminder } from '@/tramites/plan';
 
-jest.mock('expo-speech', () => ({ speak: jest.fn(), stop: jest.fn(async () => undefined) }));
+jest.mock('@/screens/voice/speak-spanish', () => ({
+  ...jest.requireActual<typeof import('@/screens/voice/speak-spanish')>('@/screens/voice/speak-spanish'),
+  speakSpanish: jest.fn(),
+}));
 
 jest.mock('expo-notifications', () => ({
   requestPermissionsAsync: jest.fn(),
@@ -47,9 +50,8 @@ const order: string[] = [];
 beforeEach(() => {
   jest.clearAllMocks();
   order.length = 0;
-  jest.mocked(Speech.speak).mockImplementation((_text, options) => {
+  jest.mocked(speakSpanish).mockImplementation(async () => {
     order.push('speak');
-    options?.onDone?.();
   });
   jest.mocked(Notifications.requestPermissionsAsync).mockImplementation(async () => {
     order.push('permission');
@@ -62,10 +64,10 @@ function scheduledTriggers(): unknown[] {
 }
 
 describe('notification scheduler (S5, S6)', () => {
-  it('speaks the one-sentence reason in es-MX before asking for permission', async () => {
+  it('speaks the one-sentence reason with the shared Spanish voice before asking for permission (field-feedback S3)', async () => {
     await createNotificationScheduler(() => new Date(2026, 10, 21, 9, 0)).schedule(REMINDER, CHECKLIST);
 
-    expect(Speech.speak).toHaveBeenCalledWith(PERMISSION_REASON, expect.objectContaining({ language: 'es-MX' }));
+    expect(speakSpanish).toHaveBeenCalledWith(PERMISSION_REASON);
     expect(PERMISSION_REASON).toBe('Para avisarle antes de la fecha, necesitamos permiso.');
     expect(order).toEqual(['speak', 'permission']);
   });
@@ -105,7 +107,7 @@ describe('notification scheduler (S5, S6)', () => {
 
   it('asks for permission after 8 s even when the voice never reports its end', async () => {
     jest.useFakeTimers();
-    jest.mocked(Speech.speak).mockImplementation(() => undefined);
+    jest.mocked(speakSpanish).mockImplementation(() => new Promise(() => undefined));
 
     const pending = createNotificationScheduler(() => new Date(2026, 10, 21, 9, 0)).schedule(REMINDER, CHECKLIST);
     await jest.advanceTimersByTimeAsync(7_999);
@@ -115,6 +117,14 @@ describe('notification scheduler (S5, S6)', () => {
 
     expect(Notifications.requestPermissionsAsync).toHaveBeenCalledTimes(1);
     jest.useRealTimers();
+  });
+
+  it('still asks for permission when the phone has no Spanish voice (field-feedback S4)', async () => {
+    jest.mocked(speakSpanish).mockRejectedValue(new NoSpanishVoiceError());
+
+    await createNotificationScheduler(() => new Date(2026, 10, 21, 9, 0)).schedule(REMINDER, CHECKLIST);
+
+    expect(Notifications.requestPermissionsAsync).toHaveBeenCalledTimes(1);
   });
 });
 

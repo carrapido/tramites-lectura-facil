@@ -1,7 +1,9 @@
-import { createAudioPlayer, type AudioPlayer, type AudioStatus } from 'expo-audio';
+import type { AudioPlayer, AudioStatus } from 'expo-audio';
 import * as Speech from 'expo-speech';
-import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { releasePlayer, startPlayer } from '@/screens/voice/audio-player';
+import { startSpanish, type SpanishPlayback } from '@/screens/voice/speak-spanish';
 import { mayaVoiceUrl } from '@/screens/voice/voice-url';
 
 /** Shown next to every Maya play button (S5). The domain owns the text; it has no React Native imports. */
@@ -14,7 +16,7 @@ export type CardVoiceFailure = 'voice-unavailable';
 export interface CardVoice {
   status: CardVoiceStatus;
   reason?: CardVoiceFailure;
-  /** Plain Spanish with the phone's own voice, free and offline (S1). */
+  /** Plain Spanish with the laptop's Gemini voice, or the phone's Spanish voice as fallback (field-feedback S3, S4). */
   speakSpanish(text: string): void;
   /** Yucatec Maya from the laptop's Gemini voice (S6). */
   playMaya(text: string): void;
@@ -27,6 +29,7 @@ interface VoiceState {
 }
 
 const IDLE: VoiceState = { status: 'idle' };
+const LOADING: VoiceState = { status: 'loading' };
 const PLAYING: VoiceState = { status: 'playing' };
 const UNAVAILABLE: VoiceState = { status: 'error', reason: 'voice-unavailable' };
 
@@ -37,10 +40,13 @@ const UNAVAILABLE: VoiceState = { status: 'error', reason: 'voice-unavailable' }
 export function useCardVoice(): CardVoice {
   const [state, setState] = useState<VoiceState>(IDLE);
   const player = useRef<AudioPlayer | null>(null);
+  const spanish = useRef<SpanishPlayback | null>(null);
   const turn = useRef(0);
 
   const silence = useCallback((): number => {
     releasePlayer(player);
+    spanish.current?.stop();
+    spanish.current = null;
     void Speech.stop();
     turn.current += 1;
     return turn.current;
@@ -53,10 +59,11 @@ export function useCardVoice(): CardVoice {
   const speakSpanish = useCallback(
     (text: string) => {
       const ownTurn = silence();
-      setState(PLAYING);
-      const finish = () => settle(ownTurn, IDLE);
-      // https://docs.expo.dev/versions/v58.0.0/sdk/speech/
-      Speech.speak(text, { language: 'es-MX', onDone: finish, onStopped: finish, onError: finish });
+      setState(LOADING);
+      const playback = startSpanish(text, () => settle(ownTurn, PLAYING));
+      spanish.current = playback;
+      // `shown`: neither the laptop nor the phone had a Spanish voice; the card already shows the text.
+      void playback.done.then((outcome) => settle(ownTurn, outcome === 'shown' ? UNAVAILABLE : IDLE));
     },
     [silence, settle],
   );
@@ -64,7 +71,7 @@ export function useCardVoice(): CardVoice {
   const playMaya = useCallback(
     (text: string) => {
       const ownTurn = silence();
-      setState({ status: 'loading' });
+      setState(LOADING);
       const end = (next: VoiceState) => {
         if (ownTurn !== turn.current) return;
         releasePlayer(player);
@@ -94,24 +101,9 @@ export function useCardVoice(): CardVoice {
   return useMemo(() => ({ ...state, speakSpanish, playMaya, stop }), [state, speakSpanish, playMaya, stop]);
 }
 
-/** createAudioPlayer does not release itself; releasePlayer does. https://docs.expo.dev/versions/v58.0.0/sdk/audio/ */
-function startPlayer(uri: string, onStatus: (status: AudioStatus) => void): AudioPlayer {
-  const created = createAudioPlayer({ uri });
-  created.addListener('playbackStatusUpdate', onStatus);
-  created.play();
-  return created;
-}
-
 /** A load or playback error ends the Maya voice; null means no change yet. */
 function stateAfter(status: AudioStatus): VoiceState | null {
   if (status.error) return UNAVAILABLE;
   if (status.didJustFinish) return IDLE;
   return status.playing ? PLAYING : null;
-}
-
-function releasePlayer(player: RefObject<AudioPlayer | null>): void {
-  const current = player.current;
-  player.current = null;
-  current?.pause();
-  current?.remove();
 }

@@ -7,8 +7,9 @@ import {
   scheduleNotificationAsync,
   setNotificationChannelAsync,
 } from 'expo-notifications';
-import * as Speech from 'expo-speech';
 import { Platform } from 'react-native';
+
+import { speakSpanish } from '@/screens/voice/speak-spanish';
 
 import { reminderTexts, type ChecklistItem, type Reminder } from '@/tramites/plan';
 import type { ReminderScheduler } from '@/tramites/ports';
@@ -64,15 +65,15 @@ async function cancelPreviousReminders(): Promise<void> {
   await Promise.all([DAY_BEFORE_ID, DUE_DAY_ID].map((identifier) => cancelScheduledNotificationAsync(identifier)));
 }
 
+/** The shared Spanish voice (field-feedback S3); with no Spanish voice, or after 8 s, the prompt still appears. */
 function speakReason(): Promise<void> {
   return new Promise((resolve) => {
-    const timer = setTimeout(finish, SPEECH_FALLBACK_MS);
+    const timer = setTimeout(resolve, SPEECH_FALLBACK_MS);
     function finish(): void {
       clearTimeout(timer);
       resolve();
     }
-    // https://docs.expo.dev/versions/v58.0.0/sdk/speech/
-    Speech.speak(PERMISSION_REASON, { language: 'es-MX', onDone: finish, onStopped: finish, onError: finish });
+    speakSpanish(PERMISSION_REASON).then(finish, finish);
   });
 }
 

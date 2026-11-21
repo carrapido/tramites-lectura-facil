@@ -54,12 +54,15 @@ Any paper works: an official notice, a meeting or event invitation, a prescripti
 
 ## Card voice
 
-Plain Spanish is spoken by the phone (`expo-speech`, `es-MX`, offline). Yucatec Maya comes from the laptop.
+Both languages come from the laptop's Gemini voice. Spanish has a phone fallback; Maya does not.
 
-- `GET /api/voice?text=<maya>`: `text` is trimmed, 1 to 300 characters; anything else returns 400 `invalid-request`.
+- `GET /api/voice?text=<text>&lang=yua|es`: `text` is trimmed, 1 to 300 characters; `lang` is `yua` (the default, so old callers keep Maya) or `es`. Anything else returns 400 `invalid-request`.
+- Spanish (`lang=es`): style "Español de México, claro, pausado y cálido." and `speechConfig.languageCode: "es-MX"`. Maya keeps its request unchanged.
+- Spanish on the phone: `speakSpanish(text)` in `src/screens/voice/speak-spanish.ts` (also behind `useCardVoice().speakSpanish`) plays the laptop WAV with `expo-audio`. If it fails, or has not started after 6 s (`LAPTOP_VOICE_DEADLINE_MS`), the phone speaks with `expo-speech` and an explicitly chosen installed voice: `es-MX`, then `es-US`, then `es-419`, then any `es-*`, an Enhanced voice first within each. The choice is remembered for the session. With no Spanish voice the phone says nothing in another language's voice: `speakSpanish` resolves `"shown"` and the sentence stays on screen. It resolves `"spoken"` or `"stopped"` otherwise, and `stopSpanish()` stops it.
+- `useCardVoice()` status for Spanish: `loading`, then `playing`, then `idle`; `error` only when both the laptop and the phone fail.
 - Success: 200 `audio/wav` with `Cache-Control: private, max-age=86400`. Missing ADC returns 503 `adc-missing`, a bad environment 500 `config-missing`, other Gemini failures 502 `upstream-failed`.
 - Model `gemini-3.8-flash-lite-tts` on location `global`, voice `Kore`. Headerless PCM from older models gets a WAV header on the server.
-- Cache: by SHA-256 of the text, in memory and in `.cache/voice/<sha256>.wav` (git-ignored). A dev-server restart reuses it; the same text is never paid twice.
+- Cache: by SHA-256 of the text for Maya and of `es:<text>` for Spanish, in memory and in `.cache/voice/<sha256>.wav` (git-ignored). Maya keeps the old key, so existing `.cache/voice` and `fixtures/demo/voice` files still hit. A dev-server restart reuses it; the same text is never paid twice. Demo recording and replay use the same keys; an unrecorded Spanish voice replays as 404 `not-recorded`.
 - Cost: about $0.009 per minute of audio (L2 in `odd/tasks/voice-output.md`). Yucatec Maya is not an officially supported TTS language: pronunciation is an experiment.
 - The app calls `useCardVoice()` in `src/screens/voice/use-card-voice.ts`. Nothing plays without a tap; one voice at a time.
 - Label rule: every Maya play button shows "Voz automática, sin revisar" (`MACHINE_VOICE_LABEL`).

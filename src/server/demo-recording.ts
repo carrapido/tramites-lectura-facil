@@ -3,6 +3,7 @@ import type {
   BatchTranslationRequest,
   BatchTranslator,
   Fact,
+  LanguageCode,
   NoticeImage,
   NoticeReader,
   NoticeReading,
@@ -75,9 +76,9 @@ export class RecordingVoiceSynthesizer implements VoiceSynthesizer {
   ) {}
 
   /** Saved as WAV, so the recording plays on its own; the caller still gets the raw bytes. */
-  async synthesize(text: string): Promise<Uint8Array> {
-    const audio = await this.inner.synthesize(text);
-    await this.store.saveVoice(text, ensureWav(audio));
+  async synthesize(text: string, language: LanguageCode = 'yua'): Promise<Uint8Array> {
+    const audio = await this.inner.synthesize(text, language);
+    await this.store.saveVoice(text, ensureWav(audio), language);
     return audio;
   }
 }
