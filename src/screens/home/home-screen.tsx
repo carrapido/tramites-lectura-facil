@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ActionButton } from '@/components/action-button';
 import { BackButton } from '@/components/back-button';
-import { NOTICE_BEFORE_READING } from '@/tramites/category';
+import { CATEGORY_NOTICE } from '@/tramites/category';
 import { theme } from '@/theme';
 
 import { checkHealth, runSmoke, type SmokeBody } from './api-client';
@@ -43,7 +43,7 @@ export function HomeScreen() {
         />
         {smoke && <SmokeResult result={smoke} />}
         <Text style={styles.notice} accessibilityLanguage="es-MX">
-          {NOTICE_BEFORE_READING}
+          {CATEGORY_NOTICE.otro}
         </Text>
       </ScrollView>
     </SafeAreaView>

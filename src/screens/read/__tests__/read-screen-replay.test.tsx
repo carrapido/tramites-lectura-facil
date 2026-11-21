@@ -36,7 +36,7 @@ const PLAN: Plan = {
 
 async function takePhoto() {
   await render(<ReadScreen />);
-  await fireEvent.press(screen.getByRole('button', { name: 'Tome una foto de su texto, papel o trámite' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Tome una foto de su papel' }));
 }
 
 beforeEach(() => {

@@ -17,8 +17,10 @@ describe('category contract (context-categories S2, S4)', () => {
     expect(CATEGORY_LABEL).toEqual({ tramite: 'Trámite', reunion: 'Reunión', salud: 'Salud', nota: 'Nota', otro: 'Otro' });
     expect(CATEGORY_NOTICE.tramite).toBe('Esto no es asesoría legal');
     expect(CATEGORY_NOTICE.salud).toBe('No sustituye a su médico');
-    expect([CATEGORY_NOTICE.reunion, CATEGORY_NOTICE.nota, CATEGORY_NOTICE.otro, NOTICE_BEFORE_READING]).toEqual(
-      Array.from({ length: 4 }, () => 'Revise el papel original'),
+    expect([CATEGORY_NOTICE.reunion, CATEGORY_NOTICE.nota, CATEGORY_NOTICE.otro]).toEqual(
+      Array.from({ length: 3 }, () => 'Revise el papel original'),
     );
+    // Before any reading the line names what can be photographed (document-reading L11).
+    expect(NOTICE_BEFORE_READING).toBe('Texto, papel o trámite');
   });
 });

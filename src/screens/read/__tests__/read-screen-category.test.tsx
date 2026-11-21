@@ -37,7 +37,7 @@ const EXPECTED: [Category, string, string][] = [
 async function readPaper(category: Category) {
   jest.mocked(readNoticePhoto).mockResolvedValue({ ok: true, category, facts: FACTS });
   await render(<ReadScreen />);
-  await fireEvent.press(screen.getByRole('button', { name: 'Tome una foto de su texto, papel o trámite' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Tome una foto de su papel' }));
   await screen.findByText(FACTS[0].text);
 }
 
@@ -47,9 +47,9 @@ beforeEach(() => {
 });
 
 describe('ReadScreen category and notice (context-categories S4)', () => {
-  it('shows "Revise el papel original" and no legal notice before any reading', async () => {
+  it('shows "Texto, papel o trámite" and no legal notice before any reading', async () => {
     await render(<ReadScreen />);
-    expect(screen.getByText(REVIEW).props.accessibilityLanguage).toBe('es-MX');
+    expect(screen.getByText('Texto, papel o trámite').props.accessibilityLanguage).toBe('es-MX');
     expect(screen.queryByText(LEGAL)).toBeNull();
     expect(screen.queryByLabelText(/^Tipo de papel/)).toBeNull();
   });

@@ -38,7 +38,7 @@ jest.mock('expo-image-manipulator', () => ({
   },
 }));
 
-const PHOTO_BUTTON = 'Tome una foto de su texto, papel o trámite';
+const PHOTO_BUTTON = 'Tome una foto de su papel';
 const FACT = { kind: 'fecha', text: 'Pague antes del 30 de noviembre.', sourceQuote: 'vence el día 30 de noviembre de 2026' };
 
 function mockReadResponse(status: number, body: unknown) {
