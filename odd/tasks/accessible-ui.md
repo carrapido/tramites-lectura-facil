@@ -119,3 +119,14 @@ Route: every task inline; no Writer trigger (one dependent behavior chain, units
     - W3: two 64 dp primary buttons on the read screen (camera and "Sí, recuérdeme"), which goes against "One primary action per screen". A team decision.
     - W4: "Escuchar" is 48 dp, not the ~64 dp in the objective 5 contract.
     - The camera button stays disabled until the plan arrives (up to 50 s).
+- **L17 (native review, PR #7):** the user granted review of `feat/accessible-ui..1c72a4f+fix` (lenses reliability, resilience, readability; lineage `review-4b4d6825d3e208d2`). The result was approved and acknowledged (authority burned). Non-blocking findings, left as later work:
+  - R3-checklist-key-collision: checklist items are keyed by `sourceQuote`, which can repeat.
+  - R3-plan-promise-orphaned and R4-plan-holds-exclusive: the plan request keeps the camera button disabled and is awaited inside the exclusive task.
+  - R3-spanish-sample-maya-error and R2-001: the Maya failure text is shown for whichever sample key failed. Limit it to `yua`.
+  - R3-store-test-order-dependence and R2-002: `language-store-memory.test.ts` depends on test order, because module state is shared.
+  - R3-due-date-day-unvalidated: `formatDueDate` checks the month but not the day.
+  - R2-003 and R2-004: readability suggestions in `confirmation-sheet.tsx`.
+- **Next step:**
+  1. Carrapido approves #2; merge it.
+  2. Retarget #7 to `main`; Carrapido reviews it.
+  3. Run `odd/phone-checks.md` on a phone and write the results in each Log. That closes T5.
