@@ -10,9 +10,10 @@ import { ActionButton } from '@/components/action-button';
 import { FactCard } from '@/components/fact-card';
 import { SecondaryButton } from '@/components/secondary-button';
 import type { VoiceControls } from '@/components/voice-controls';
+import { REPLAY_LABEL } from '@/screens/demo-label';
 import { fetchEasyRead } from '@/screens/easy-read-client';
 import { useLanguage } from '@/screens/language/language-store';
-import { fetchPlan } from '@/screens/plan/plan-client';
+import { fetchPlan, type PlanResult as PlanResponse } from '@/screens/plan/plan-client';
 import { useScreenVoice } from '@/screens/voice/use-screen-voice';
 import type { EasyReadCard } from '@/tramites/easy-read';
 import type { Plan } from '@/tramites/plan';
@@ -24,11 +25,15 @@ import { readNoticePhoto, type NoticePhoto, type ReadFact } from './api-client';
 type ReadState =
   | { step: 'idle' }
   | { step: 'reading' }
-  | { step: 'cards'; facts: ReadFact[]; cards: EasyReadCard[] }
+  | { step: 'cards'; facts: ReadFact[]; cards: EasyReadCard[]; replayed: boolean }
   | { step: 'failed'; message: string };
 
 /** The agent's proposal loads after the cards and never hides them (S10). */
-type PlanState = { step: 'none' } | { step: 'loading' } | { step: 'ready'; plan: Plan } | { step: 'failed' };
+type PlanState =
+  | { step: 'none' }
+  | { step: 'loading' }
+  | { step: 'ready'; plan: Plan; replayed: boolean }
+  | { step: 'failed' };
 
 const PLAN_FAILED = 'No pudimos preparar la lista. Sus tarjetas siguen aquí.';
 
@@ -45,6 +50,7 @@ const FAILURE_TEXT: Record<string, string> = {
   'bad-response': 'La laptop respondió con un error. Avise a quien la atiende.',
   timeout: 'La laptop tardó mucho. Revise la red y tome la foto otra vez.',
   unreachable: 'Sin conexión. Revise que el teléfono y la laptop usen la misma red.',
+  'not-recorded': 'Esta parte no está grabada. Use el modo en vivo.',
 };
 const UPSTREAM_FAILED = 'Google no respondió. Intente otra vez en un momento.';
 
@@ -69,6 +75,7 @@ export function ReadScreen() {
           onPress={takePhoto}
           disabled={busy}
         />
+        {isReplayed(state, plan) ? <ReplayLabel /> : null}
         <ReadResult state={state} showMaya={showMaya} voice={voice} />
         <PlanResult key={photoCount} plan={plan} voice={voice} />
         <Text style={styles.notice} accessibilityLanguage="es-MX">
@@ -92,6 +99,8 @@ function useNoticeReading(silenceVoices: () => void) {
   const [state, setState] = useState<ReadState>({ step: 'idle' });
   const [plan, setPlan] = useState<PlanState>({ step: 'none' });
   const [photoCount, setPhotoCount] = useState(0);
+  /** The newest photo; a plan from an older one is dropped (PR #7 review W3). */
+  const latestPhoto = useRef(0);
   const { busy, runExclusive } = useExclusiveTask();
 
   function takePhoto() {
@@ -120,19 +129,28 @@ function useNoticeReading(silenceVoices: () => void) {
       setState({ step: 'failed', message: UNREADABLE });
       return;
     }
+    const photoNumber = latestPhoto.current + 1;
+    latestPhoto.current = photoNumber;
     setState({ step: 'reading' });
     setPlan({ step: 'none' });
-    setPhotoCount((count) => count + 1);
+    setPhotoCount(photoNumber);
     const body = await readNoticePhoto(photo);
     if (!body.ok) {
       setState({ step: 'failed', message: failureText(body.reason) });
       return;
     }
     const proposal = fetchPlan(body.facts);
-    setState({ step: 'cards', facts: body.facts, cards: await easyReadCards(body.facts) });
+    const easyRead = await easyReadCards(body.facts);
+    setState({ step: 'cards', facts: body.facts, cards: easyRead.cards, replayed: body.replayed === true || easyRead.replayed });
     setPlan({ step: 'loading' });
+    // Not awaited: the camera is free again while the plan loads (PR #7 review W3).
+    void showPlan(proposal, photoNumber);
+  }
+
+  async function showPlan(proposal: Promise<PlanResponse>, photoNumber: number) {
     const planned = await proposal;
-    setPlan(planned.ok ? { step: 'ready', plan: planned.plan } : { step: 'failed' });
+    if (photoNumber !== latestPhoto.current) return;
+    setPlan(planned.ok ? { step: 'ready', plan: planned.plan, replayed: planned.replayed === true } : { step: 'failed' });
   }
 
   return { state, plan, photoCount, busy, takePhoto };
@@ -207,9 +225,11 @@ function openLanguagePicker(voice: VoiceControls) {
 }
 
 /** The easy-read cards, or the objective 3 facts in Spanish when they fail (S7). */
-async function easyReadCards(facts: ReadFact[]): Promise<EasyReadCard[]> {
+async function easyReadCards(facts: ReadFact[]): Promise<{ cards: EasyReadCard[]; replayed: boolean }> {
   const easyRead = await fetchEasyRead(facts);
-  return easyRead.ok ? easyRead.cards : facts.map(spanishOnlyCard);
+  return easyRead.ok
+    ? { cards: easyRead.cards, replayed: easyRead.replayed === true }
+    : { cards: facts.map(spanishOnlyCard), replayed: false };
 }
 
 function spanishOnlyCard(fact: ReadFact): EasyReadCard {
@@ -218,6 +238,22 @@ function spanishOnlyCard(fact: ReadFact): EasyReadCard {
 
 function failureText(reason: string): string {
   return FAILURE_TEXT[reason] ?? UPSTREAM_FAILED;
+}
+
+/** Any answer from the demo recordings marks the whole result (easyread-pitch S5). */
+function isReplayed(state: ReadState, plan: PlanState): boolean {
+  const cardsReplayed = state.step === 'cards' && state.replayed;
+  const planReplayed = plan.step === 'ready' && plan.replayed;
+  return cardsReplayed || planReplayed;
+}
+
+/** Plain words, not only a color, so a recorded answer is never taken for a live one. */
+function ReplayLabel() {
+  return (
+    <Text style={styles.replay} accessibilityLanguage="es-MX">
+      {REPLAY_LABEL}
+    </Text>
+  );
 }
 
 interface ReadResultProps {
@@ -278,6 +314,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.color.paper },
   content: { padding: theme.space.lg, gap: theme.space.lg },
   status: { fontSize: theme.type.body, color: theme.color.ink },
+  replay: { fontSize: theme.type.label, fontWeight: theme.weight.label, color: theme.color.ink },
   facts: { gap: theme.space.md },
   error: { fontSize: theme.type.body, color: theme.color.danger },
   notice: { fontSize: theme.type.label, color: theme.color.inkMuted },
