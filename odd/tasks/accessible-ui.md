@@ -64,3 +64,12 @@ Route: every task inline; no Writer trigger (one dependent behavior chain, units
   - R3-cambiar-idioma-press-untested: no test presses "Cambiar idioma" and checks the route.
   - R3-saved-language-unused: the saved language is not used yet (objective 4).
 - **Next step:** the team reviews PR #2. Then run the device checks in L6 and close T5. Status stays in-progress until then.
+- **L9 (user, 2026-11-21, verbatim excerpt):** "Rebasea mi PR #2 sobre main actualizado (integrando los cambios de app.json y package.json, incluyendo expo-sqlite), resuelve los 3 arreglos pendientes en PR #2 (el valor fijo de borde que debe moverse a theme.ts y los otros dos ajustes indicados en el review/issue #4), ejecuta `npm ci && npm test` para confirmar que toda la suite pasa en verde y avisa cuando esté listo para aprobación e integración."
+- **L10 (rebase and review fixes):**
+  - PRs #1, #3 and #5 were reviewed and merged into `main` with merge commits. #3 and #5 conflicted only in their own claim front-matter, and the branch version was kept.
+  - `feat/accessible-ui` was rebased on `134adc6`, and `app.json` keeps both `"expo-audio"` and `"expo-sqlite"`.
+  - Fix 1: after a choice, `/idioma` goes back, or replaces with `/` when nothing is behind it.
+  - Fix 2: `theme.border` has `hairline: 1` and `strong: 2`, and no app source hard-codes a `borderWidth` any more. This also covers `secondary-button`, `fact-card` and `home-screen`.
+  - Fix 3: the `app.json` conflict.
+  - Also fixed: the save-failure comment, which was flagged as misleading.
+  - RED: 3 failing. GREEN: `npm ci && npm test` passes 234/234, and `tsc --noEmit` and `expo lint` are clean.

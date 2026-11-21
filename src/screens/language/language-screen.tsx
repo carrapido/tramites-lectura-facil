@@ -21,7 +21,7 @@ export function LanguageScreen() {
 
   function choose(choice: Language) {
     rememberOrSkip(choice);
-    router.back();
+    leaveScreen();
   }
 
   return (
@@ -39,7 +39,14 @@ export function LanguageScreen() {
   );
 }
 
-/** A failed save must not trap the person on this screen; the choice then lasts until the app closes. */
+/** Same rule as `BackButton`: go home when /idioma was opened with no screen behind it. */
+function leaveScreen() {
+  // https://docs.expo.dev/versions/v58.0.0/sdk/router/
+  if (router.canGoBack()) router.back();
+  else router.replace('/');
+}
+
+/** A failed save must not trap the person on this screen; the app then stays in the default language. */
 function rememberOrSkip(choice: Language) {
   try {
     saveLanguage(choice);
@@ -91,7 +98,7 @@ const styles = StyleSheet.create({
     gap: theme.space.md,
     paddingHorizontal: theme.space.lg,
     borderRadius: theme.radius.button,
-    borderWidth: 2,
+    borderWidth: theme.border.strong,
     borderColor: theme.color.signal,
   },
   optionSelected: { backgroundColor: theme.color.signal },

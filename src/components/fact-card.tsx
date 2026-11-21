@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     gap: theme.space.md,
     padding: theme.space.lg,
     borderRadius: theme.radius.card,
-    borderWidth: 1,
+    borderWidth: theme.border.hairline,
     borderColor: theme.color.rule,
   },
   quote: { fontSize: theme.type.body, fontStyle: 'italic', color: theme.color.inkMuted },
