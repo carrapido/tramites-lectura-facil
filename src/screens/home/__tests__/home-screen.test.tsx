@@ -14,7 +14,7 @@ function mockFetch(routes: Record<string, { status: number; body: unknown }>) {
 describe('HomeScreen', () => {
   it('shows "conectado" when the laptop answers /api/health (S4)', async () => {
     mockFetch({ '/api/health': { status: 200, body: { ok: true } } });
-    render(<HomeScreen />);
+    await render(<HomeScreen />);
     expect(await screen.findByText('conectado')).toBeTruthy();
   });
 
@@ -22,7 +22,7 @@ describe('HomeScreen', () => {
     global.fetch = jest.fn(async () => {
       throw new TypeError('Network request failed');
     });
-    render(<HomeScreen />);
+    await render(<HomeScreen />);
     expect(await screen.findByText('Sin conexión. Revise que el teléfono y la laptop usen la misma red.')).toBeTruthy();
   });
 
@@ -31,14 +31,14 @@ describe('HomeScreen', () => {
       '/api/health': { status: 200, body: { ok: true } },
       '/api/smoke': { status: 200, body: { ok: true, plainSpanish: 'Vaya a la oficina.', maya: "Xi'iken." } },
     });
-    render(<HomeScreen />);
+    await render(<HomeScreen />);
 
     const button = await screen.findByRole('button', { name: 'Probar Google' });
     const { minHeight, minWidth } = StyleSheet.flatten(button.props.style);
     expect(minHeight).toBeGreaterThanOrEqual(48);
     expect(minWidth).toBeGreaterThanOrEqual(48);
 
-    fireEvent.press(button);
+    await fireEvent.press(button);
 
     const spanish = await screen.findByText('Vaya a la oficina.');
     const maya = screen.getByText("Xi'iken.");
@@ -58,8 +58,8 @@ describe('HomeScreen', () => {
         body: { ok: false, reason: 'adc-missing', fix: 'gcloud auth application-default login' },
       },
     });
-    render(<HomeScreen />);
-    fireEvent.press(await screen.findByRole('button', { name: 'Probar Google' }));
+    await render(<HomeScreen />);
+    await fireEvent.press(await screen.findByRole('button', { name: 'Probar Google' }));
     expect(
       await screen.findByText('La laptop no tiene acceso a Google. Ejecute: gcloud auth application-default login'),
     ).toBeTruthy();
