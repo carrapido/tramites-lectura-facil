@@ -12,10 +12,13 @@ import { SecondaryButton } from '@/components/secondary-button';
 import type { VoiceControls } from '@/components/voice-controls';
 import { fetchEasyRead } from '@/screens/easy-read-client';
 import { useLanguage } from '@/screens/language/language-store';
+import { fetchPlan } from '@/screens/plan/plan-client';
 import { useScreenVoice } from '@/screens/voice/use-screen-voice';
 import type { EasyReadCard } from '@/tramites/easy-read';
+import type { Plan } from '@/tramites/plan';
 import { theme } from '@/theme';
 
+import { PlanSheet } from './confirmation-sheet';
 import { readNoticePhoto, type NoticePhoto, type ReadFact } from './api-client';
 
 type ReadState =
@@ -23,6 +26,11 @@ type ReadState =
   | { step: 'reading' }
   | { step: 'cards'; facts: ReadFact[]; cards: EasyReadCard[] }
   | { step: 'failed'; message: string };
+
+/** The agent's proposal loads after the cards and never hides them (S10). */
+type PlanState = { step: 'none' } | { step: 'loading' } | { step: 'ready'; plan: Plan } | { step: 'failed' };
+
+const PLAN_FAILED = 'No pudimos preparar la lista. Sus tarjetas siguen aquí.';
 
 const CAMERA_REASON = 'Necesitamos la cámara para leer su papel.';
 const PERMISSION_DENIED = 'Sin permiso para la cámara. Actívelo en Ajustes del teléfono.';
@@ -48,7 +56,7 @@ const PHOTO_QUALITY = 0.5;
 const MAX_PHOTO_WIDTH = 1600;
 
 export function ReadScreen() {
-  const { state, busy, takePhoto } = useNoticeReading();
+  const { state, plan, photoCount, busy, takePhoto } = useNoticeReading();
   const showMaya = useLanguage() === 'yua';
   const voice = useScreenVoice();
 
@@ -62,6 +70,7 @@ export function ReadScreen() {
           disabled={busy}
         />
         <ReadResult state={state} showMaya={showMaya} voice={voice} />
+        <PlanResult key={photoCount} plan={plan} voice={voice} />
         <Text style={styles.notice} accessibilityLanguage="es-MX">
           Esto no es asesoría legal
         </Text>
@@ -80,6 +89,8 @@ export function ReadScreen() {
 
 function useNoticeReading() {
   const [state, setState] = useState<ReadState>({ step: 'idle' });
+  const [plan, setPlan] = useState<PlanState>({ step: 'none' });
+  const [photoCount, setPhotoCount] = useState(0);
   const { busy, runExclusive } = useExclusiveTask();
 
   function takePhoto() {
@@ -108,15 +119,21 @@ function useNoticeReading() {
       return;
     }
     setState({ step: 'reading' });
+    setPlan({ step: 'none' });
+    setPhotoCount((count) => count + 1);
     const body = await readNoticePhoto(photo);
     if (!body.ok) {
       setState({ step: 'failed', message: failureText(body.reason) });
       return;
     }
+    const proposal = fetchPlan(body.facts);
     setState({ step: 'cards', facts: body.facts, cards: await easyReadCards(body.facts) });
+    setPlan({ step: 'loading' });
+    const planned = await proposal;
+    setPlan(planned.ok ? { step: 'ready', plan: planned.plan } : { step: 'failed' });
   }
 
-  return { state, busy, takePhoto };
+  return { state, plan, photoCount, busy, takePhoto };
 }
 
 /**
@@ -225,6 +242,19 @@ function ReadResult({ state, showMaya, voice }: ReadResultProps) {
       </View>
     );
   }
+  return null;
+}
+
+function PlanResult({ plan, voice }: { plan: PlanState; voice: VoiceControls }) {
+  if (plan.step === 'loading') return <Text style={styles.status}>Preparando su lista.</Text>;
+  if (plan.step === 'failed') {
+    return (
+      <Text style={styles.error} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
+        {PLAN_FAILED}
+      </Text>
+    );
+  }
+  if (plan.step === 'ready') return <PlanSheet plan={plan.plan} voice={voice} />;
   return null;
 }
 

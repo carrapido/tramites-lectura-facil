@@ -43,7 +43,7 @@ Accounts, login, form filling, web build.
 
 - [x] T6 (S8, S9), inline: `PlayButton` takes `status`, `onPress` and `onStop`; `FactCard` takes `EasyReadCard`, the language and screen voice controls; the picker samples use `useCardVoice()`.
 - [x] T7 (S7, S8), inline: the read screen calls `fetchEasyRead`, falls back to Spanish facts and follows the saved language.
-- [ ] T8 (S10), inline: `ConfirmationSheet` with `fetchPlan`, "Escuchar", the checklist, the date and place in large type, "Sí, recuérdeme" and "No, gracias".
+- [x] T8 (S10), inline: `ConfirmationSheet` with `fetchPlan`, "Escuchar", the checklist, the date and place in large type, "Sí, recuérdeme" and "No, gracias".
 - [ ] T9 (step 4), inline: phone checklist in `odd/phone-checks.md`; results go into each objective's Log.
 
 Route: every task inline; no Writer trigger (one dependent behavior chain, units under ~100 lines each).
@@ -93,3 +93,13 @@ Route: every task inline; no Writer trigger (one dependent behavior chain, units
   - `jest.setup.ts` stubs `expo-audio`, which cannot load under Jest (`package.json` `jest.setupFiles`).
   - The objective 3 read-screen tests got `stop` in their `expo-speech` mocks, because the screen voice stops speech on unmount. No assertion changed; objective 3 is already GREEN.
   - Two of my own new tests had wrong doubles (a storage that never returns what it saved, and a speech mock set before the photo). Both doubles were fixed; no expectation was weakened.
+- **L14 (T8):**
+  - RED: 2 suites failing. GREEN: 267/267, and `tsc` and `expo lint` are clean.
+  - `src/screens/read/confirmation-sheet.tsx`:
+    - `PlanSheet` calls `useReminder()` and is remounted for each photo.
+    - The sheet shows the proposal sentence, "Escuchar" (key `plan`, which reads the proposal, items, date, place and "¿Quiere que le recuerde?"), and each checklist item with "¿De dónde salió?".
+    - The date is in title type, for example "30 de noviembre de 2026". The place is shown too.
+    - "Sí, recuérdeme" is an `ActionButton` that is disabled while `asking`. "No, gracias" is next to it.
+    - After an answer, "Listo. Le avisaremos un día antes y el mismo día." or "Está bien. No guardamos ningún aviso."
+  - `fetchPlan(facts)` starts with `fetchEasyRead`, and the sheet appears after the cards. A failure says "No pudimos preparar la lista. Sus tarjetas siguen aquí."
+  - `SourceQuote` moved to `src/components/source-quote.tsx`.

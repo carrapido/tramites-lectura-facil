@@ -1,5 +1,4 @@
 import { SymbolView, type AndroidSymbol, type SFSymbol } from 'expo-symbols';
-import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { EasyReadCard } from '@/tramites/easy-read';
@@ -8,7 +7,7 @@ import { theme } from '@/theme';
 
 import { MayaText, SpanishText } from './language-text';
 import { PlayButton } from './play-button';
-import { SecondaryButton } from './secondary-button';
+import { SourceQuote } from './source-quote';
 import type { VoiceControls } from './voice-controls';
 
 interface FactCardProps {
@@ -95,24 +94,6 @@ function MayaSection({ maya, voiceKey, voice }: { maya: string; voiceKey: string
   );
 }
 
-function SourceQuote({ quote }: { quote: string }) {
-  const [visible, setVisible] = useState(false);
-  if (visible) {
-    return (
-      <Text style={styles.quote} accessibilityLanguage="es-MX">
-        {quote}
-      </Text>
-    );
-  }
-  return (
-    <SecondaryButton
-      label="¿De dónde salió?"
-      icon={{ ios: 'text.quote', android: 'format_quote' }}
-      onPress={() => setVisible(true)}
-    />
-  );
-}
-
 const styles = StyleSheet.create({
   card: {
     gap: theme.space.md,
@@ -124,5 +105,4 @@ const styles = StyleSheet.create({
   section: { gap: theme.space.sm },
   note: { fontSize: theme.type.label, color: theme.color.inkMuted },
   error: { fontSize: theme.type.body, color: theme.color.danger },
-  quote: { fontSize: theme.type.body, fontStyle: 'italic', color: theme.color.inkMuted },
 });
