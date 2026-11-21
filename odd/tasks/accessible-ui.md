@@ -44,7 +44,7 @@ Accounts, login, form filling, web build.
 - [x] T6 (S8, S9), inline: `PlayButton` takes `status`, `onPress` and `onStop`; `FactCard` takes `EasyReadCard`, the language and screen voice controls; the picker samples use `useCardVoice()`.
 - [x] T7 (S7, S8), inline: the read screen calls `fetchEasyRead`, falls back to Spanish facts and follows the saved language.
 - [x] T8 (S10), inline: `ConfirmationSheet` with `fetchPlan`, "Escuchar", the checklist, the date and place in large type, "Sí, recuérdeme" and "No, gracias".
-- [ ] T9 (step 4), inline: phone checklist in `odd/phone-checks.md`; results go into each objective's Log.
+- [x] T9 (step 4), inline: phone checklist in `odd/phone-checks.md`; results go into each objective's Log.
 
 Route: every task inline; no Writer trigger (one dependent behavior chain, units under ~100 lines each).
 
@@ -103,3 +103,4 @@ Route: every task inline; no Writer trigger (one dependent behavior chain, units
     - After an answer, "Listo. Le avisaremos un día antes y el mismo día." or "Está bien. No guardamos ningún aviso."
   - `fetchPlan(facts)` starts with `fetchEasyRead`, and the sheet appears after the cards. A failure says "No pudimos preparar la lista. Sus tarjetas siguen aquí."
   - `SourceQuote` moved to `src/components/source-quote.tsx`.
+- **L15 (T9):** `odd/phone-checks.md` lists the manual checks (connection, camera, both voices, language restart, notifications, TalkBack/VoiceOver, 200% font), each with the Log to write in. Results are pending on a phone. T5 stays open until S3 and S6 are seen on a device. Objective 8 files were not touched.
