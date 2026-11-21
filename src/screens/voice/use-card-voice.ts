@@ -33,6 +33,9 @@ const LOADING: VoiceState = { status: 'loading' };
 const PLAYING: VoiceState = { status: 'playing' };
 const UNAVAILABLE: VoiceState = { status: 'error', reason: 'voice-unavailable' };
 
+/** Longer than a cold Gemini TTS call (about 7 s measured), short enough to let the person retry. */
+export const MAYA_VOICE_DEADLINE_MS = 15_000;
+
 /**
  * One voice at a time, only after a tap: nothing plays on mount (S5).
  * Each call starts a new turn; callbacks from an older turn are ignored.
@@ -42,8 +45,10 @@ export function useCardVoice(): CardVoice {
   const player = useRef<AudioPlayer | null>(null);
   const spanish = useRef<SpanishPlayback | null>(null);
   const turn = useRef(0);
+  const mayaDeadline = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const silence = useCallback((): number => {
+    clearMayaDeadline(mayaDeadline);
     releasePlayer(player);
     spanish.current?.stop();
     spanish.current = null;
@@ -74,14 +79,19 @@ export function useCardVoice(): CardVoice {
       setState(LOADING);
       const end = (next: VoiceState) => {
         if (ownTurn !== turn.current) return;
+        clearMayaDeadline(mayaDeadline);
         releasePlayer(player);
         setState(next);
       };
       const follow = (status: AudioStatus) => {
         const next = stateAfter(status);
-        if (next === PLAYING) settle(ownTurn, next);
-        else if (next) end(next);
+        if (next === PLAYING) {
+          clearMayaDeadline(mayaDeadline);
+          settle(ownTurn, next);
+        } else if (next) end(next);
       };
+      // A laptop that never answers must not leave the busy button stuck (field-feedback S8).
+      mayaDeadline.current = setTimeout(() => end(UNAVAILABLE), MAYA_VOICE_DEADLINE_MS);
       try {
         player.current = startPlayer(mayaVoiceUrl(text), follow);
       } catch {
@@ -99,6 +109,11 @@ export function useCardVoice(): CardVoice {
   useEffect(() => () => void silence(), [silence]);
 
   return useMemo(() => ({ ...state, speakSpanish, playMaya, stop }), [state, speakSpanish, playMaya, stop]);
+}
+
+function clearMayaDeadline(deadline: { current: ReturnType<typeof setTimeout> | null }): void {
+  if (deadline.current) clearTimeout(deadline.current);
+  deadline.current = null;
 }
 
 /** A load or playback error ends the Maya voice; null means no change yet. */

@@ -1,9 +1,8 @@
-import { StyleSheet, Text, View } from 'react-native';
-
-import { theme } from '@/theme';
-
 import { SecondaryButton } from './secondary-button';
 import type { PlayStatus } from './voice-controls';
+
+/** Said while the laptop prepares the voice, before it plays (field-feedback S6). */
+const PREPARING_VOICE = 'Preparando la voz.';
 
 interface PlayButtonProps {
   status: PlayStatus;
@@ -14,35 +13,30 @@ interface PlayButtonProps {
   accessibilityLabel?: string;
 }
 
+/**
+ * "Escuchar" when idle, a busy "Preparando la voz." while the voice loads (S6, S8),
+ * and "Parar" while it plays.
+ */
 export function PlayButton({ status, onPress, onStop, accessibilityLabel = 'Escuchar' }: PlayButtonProps) {
-  if (status === 'idle') {
+  if (status === 'loading') {
     return (
       <SecondaryButton
-        label="Escuchar"
-        accessibilityLabel={accessibilityLabel}
+        label={PREPARING_VOICE}
         icon={{ ios: 'speaker.wave.2.fill', android: 'volume_up' }}
-        onPress={onPress}
+        busy
+        accessibilityLiveRegion="polite"
       />
     );
   }
+  if (status === 'playing') {
+    return <SecondaryButton label="Parar" icon={{ ios: 'stop.fill', android: 'stop' }} onPress={onStop} />;
+  }
   return (
-    <View style={styles.active}>
-      <SecondaryButton
-        label="Parar"
-        accessibilityState={{ busy: status === 'loading' }}
-        icon={{ ios: 'stop.fill', android: 'stop' }}
-        onPress={onStop}
-      />
-      {status === 'loading' ? (
-        <Text style={styles.status} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
-          Preparando la voz.
-        </Text>
-      ) : null}
-    </View>
+    <SecondaryButton
+      label="Escuchar"
+      accessibilityLabel={accessibilityLabel}
+      icon={{ ios: 'speaker.wave.2.fill', android: 'volume_up' }}
+      onPress={onPress}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  active: { gap: theme.space.xs },
-  status: { fontSize: theme.type.label, color: theme.color.inkMuted },
-});

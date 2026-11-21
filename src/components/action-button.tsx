@@ -1,30 +1,35 @@
-import { SymbolView, type AndroidSymbol, type SFSymbol } from 'expo-symbols';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
 import { theme } from '@/theme';
 
+import { ButtonIcon, type ButtonSymbol } from './button-icon';
+import { PressableFeedback } from './pressable-feedback';
+
 interface ActionButtonProps {
   label: string;
-  icon: { ios: SFSymbol; android: AndroidSymbol };
+  icon: ButtonSymbol;
   onPress: () => void;
   disabled?: boolean;
+  /** Its action is in progress: loading symbol next to the words, and no second tap (field-feedback S8). */
+  busy?: boolean;
 }
 
 /** Primary action: one tap, icon plus word, 64 dp tall. https://docs.expo.dev/versions/v58.0.0/sdk/symbols/ */
-export function ActionButton({ label, icon, onPress, disabled = false }: ActionButtonProps) {
+export function ActionButton({ label, icon, onPress, disabled = false, busy = false }: ActionButtonProps) {
+  const inactive = disabled || busy;
   return (
-    <Pressable
+    <PressableFeedback
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityLanguage="es-MX"
-      accessibilityState={{ disabled }}
-      disabled={disabled}
+      accessibilityState={{ disabled: inactive, busy }}
+      disabled={inactive}
       onPress={onPress}
       style={styles.button}
     >
-      <SymbolView name={icon} size={theme.size.icon} tintColor={theme.color.onSignal} fallback={null} />
+      <ButtonIcon icon={icon} busy={busy} color={theme.color.onSignal} />
       <Text style={styles.label}>{label}</Text>
-    </Pressable>
+    </PressableFeedback>
   );
 }
 

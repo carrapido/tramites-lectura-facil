@@ -119,3 +119,18 @@ describe('ConfirmationSheet follow-ups (verifier W1, W6)', () => {
     expect(formatDueDate('2026-13-01')).toBe('2026-13-01');
   });
 });
+
+describe('ConfirmationSheet busy answer (field-feedback S8)', () => {
+  it('shows "Sí, recuérdeme" busy with its loading symbol while the phone asks', async () => {
+    await render(<ConfirmationSheet plan={PLAN} voice={fakeVoice()} reminder={reminderControls('asking')} />);
+    expect(screen.getByRole('button', { name: 'Sí, recuérdeme' }).props.accessibilityState).toEqual(
+      expect.objectContaining({ disabled: true, busy: true }),
+    );
+    expect(screen.getByTestId(/^button-(spinner|still)$/)).toBeTruthy();
+  });
+
+  it('shows no loading symbol on "Sí, recuérdeme" before the answer', async () => {
+    await render(<ConfirmationSheet plan={PLAN} voice={fakeVoice()} reminder={reminderControls()} />);
+    expect(screen.queryByTestId(/^button-(spinner|still)$/)).toBeNull();
+  });
+});

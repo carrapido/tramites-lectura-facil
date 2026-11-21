@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { AccessibilityInfo } from 'react-native';
 
 import { ReadScreen } from '@/screens/read/read-screen';
 import { speakSpanish } from '@/screens/voice/speak-spanish';
@@ -59,6 +60,9 @@ function nextMacrotask() {
 
 beforeEach(() => {
   jest.resetAllMocks();
+  // resetAllMocks also empties React Native's AccessibilityInfo mock, which every button now reads (field-feedback S7).
+  jest.mocked(AccessibilityInfo.isReduceMotionEnabled).mockResolvedValue(false);
+  jest.mocked(AccessibilityInfo.addEventListener).mockReturnValue({ remove: jest.fn() });
   jest.mocked(speakSpanish).mockResolvedValue(undefined);
   jest.mocked(ImagePicker.requestCameraPermissionsAsync).mockResolvedValue({ granted: true } as ImagePicker.CameraPermissionResponse);
   jest.mocked(ImagePicker.launchCameraAsync).mockResolvedValue({

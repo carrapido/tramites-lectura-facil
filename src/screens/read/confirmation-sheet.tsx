@@ -125,7 +125,7 @@ function AnswerButtons({ plan, controls }: { plan: Plan; controls: ReminderContr
       <ActionButton
         label="Sí, recuérdeme"
         icon={{ ios: 'bell.fill', android: 'notifications' }}
-        disabled={asking}
+        busy={asking}
         onPress={() => void controls.schedule(plan, 'yes')}
       />
       <SecondaryButton

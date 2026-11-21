@@ -81,7 +81,7 @@ export function ReadScreen() {
           label="Tome una foto de su papel"
           icon={{ ios: 'camera.fill', android: 'photo_camera' }}
           onPress={takePhoto}
-          disabled={busy}
+          busy={busy}
         />
         {isReplayed(state, plan) ? <ReplayLabel /> : null}
         <ReadResult state={state} showMaya={showMaya} voice={voice} />
