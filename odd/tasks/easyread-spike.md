@@ -1,5 +1,5 @@
 ---
-status:  one notice end to end:in-progress
+status: in-progress
 ---
 
-# Spike
+# Spike: one notice end to end
