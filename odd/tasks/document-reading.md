@@ -35,4 +35,4 @@ Translation and voice (objectives 4 and 5).
   4. The read request aborts after 45 s (`READ_DEADLINE_MS`) with reason `timeout` and "La laptop tardó mucho. Revise la red y tome la foto otra vez." Closes R4-read-fetch-no-timeout.
   5. A composition failure in `/api/read` returns 500 `config-missing` through the shared `composeOrNull` (also used by smoke); the app says "Falta configurar la laptop. Avise a quien la atiende." Closes R3-compose-failure-mapped-502.
   - Left open: R1-001 (no auth on the API; demo only, avoid `--tunnel` unless needed), R3-duplicate-fact-keys, R3-min-facts-unenforced.
-- **Next objective:** 4, Plain Spanish and Yucatec Maya text (`indigenous-output.md`). Not started.
+- **Next:** phone checks only (odd/phone-checks.md).

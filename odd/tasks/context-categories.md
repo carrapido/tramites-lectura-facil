@@ -49,3 +49,15 @@ Typed or pasted text input (photo only), new categories beyond the list, per-cat
 - **L7 (S7 real smoke, port 8082, record mode):** `fixtures/invitacion-ficticia.jpg` → `category: "reunion"`, 5 traceable facts, plan with "Lleve usted su recibo de agua más reciente." and reminder 2026-12-05 at "Casa ejidal, Calle 21 número 45". Finding: one fact text says "recibo de agua potable" while its quote says "recibo de agua" (word taken from elsewhere in the paper). `fixtures/aviso-ficticio.jpg` → `category: "tramite"`, 6 facts, 6 Maya voices, plan without "vigente" ("Presente usted este aviso y una identificación oficial."; PR #10's rule works).
 - **L8 (S6):** recordings re-made with the category and PR #10's instruction; replay → 5 `OK … replayed`, `category: "tramite"`. Limitation: replay answers with the notice for any photo (a phone photo never matches byte for byte), so the invitation is live-only; written in the runbook and the pitch. Pitch, README and runbook now present the app as an inclusion tool for any paper. S6 amended in practice: the invitation's easy-read, voice and plan are recorded, but its reading is not replayable.
 - **Next:** phone checks for the category row and notices (Dean-koro, issue #4); consider a domain check that flags fact words absent from the quote ("potable", "vigente").
+- **L9 (alignment after #9–#14):** docs and logs brought in line with the merged PRs (branch `chore/align-docs`).
+  - `AGENTS.md`: section "Project rules (easy reading for any paper)"; the notice rule now points to `CATEGORY_NOTICE` (trámite, salud, other categories and before reading).
+  - `README.md`: record step plays each Spanish and Maya voice; "Respuesta grabada" is shown next to replayed JSON answers only (the voice header is not shown).
+  - `docs/pitch.md`: the Maya voice label is "Voz automática, sin revisar"; Spanish is read by the laptop voice, with the phone's Spanish voice as fallback.
+  - `docs/demo-runbook.md`: readiness gate replaced by "Full script: everything in docs/pitch.md is merged."; T-60 plays Spanish and Maya voices and the agent sheet's "Escuchar"; warning about Gemini TTS 429 on bursts.
+  - `odd/phone-checks.md`: runs from `main`; laptop Spanish voice with phone fallback; exactly 2 pending reminders; foreground banner; rear camera, loading steps, category row and notice, press feedback, busy buttons.
+  - `odd/objectives.md` and `easyread-spike.md`: the spike is superseded by objectives 2–10 (`status: done`).
+  - `voice-output.md`: Goal's phone Spanish voice and S1 marked superseded by field-feedback S3–S4; S2 route `?text=<text>&lang=yua|es`.
+  - Stale "Next objective … Not started." lines in `document-reading.md`, `indigenous-output.md`, `agentic-checklist.md`, `voice-output.md`, and the old "Next step" in `accessible-ui.md`, now point to the phone checks.
+  - `easyread-pitch.md` L7 and `field-feedback.md` L3: merged items marked done.
+  - S5: the confirmation sheet's spoken intro without a reminder says "Le propongo esta lista para su papel." (new test in `confirmation-sheet.test.tsx`).
+  - `app.json`: `name` is "Lectura fácil" (slug and scheme unchanged).

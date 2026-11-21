@@ -72,7 +72,7 @@ export function formatDueDate(isoDate: string): string {
 function proposalSentence(reminder: Reminder | null): string {
   return reminder
     ? `Le propongo esta lista y un aviso antes del ${formatDueDate(reminder.dueDate)}.`
-    : 'Le propongo esta lista para su trámite.';
+    : 'Le propongo esta lista para su papel.';
 }
 
 function spokenProposal(plan: Plan): string {

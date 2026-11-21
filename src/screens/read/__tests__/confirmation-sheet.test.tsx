@@ -120,6 +120,17 @@ describe('ConfirmationSheet follow-ups (verifier W1, W6)', () => {
   });
 });
 
+describe('ConfirmationSheet for any paper (context-categories S5)', () => {
+  it('proposes the list for "su papel" and never says "trámite" when there is no reminder', async () => {
+    const voice = fakeVoice();
+    await render(<ConfirmationSheet plan={{ ...PLAN, reminder: null }} voice={voice} reminder={reminderControls()} />);
+    await fireEvent.press(screen.getByRole('button', { name: 'Escuchar' }));
+    const [, spoken] = jest.mocked(voice.speakSpanish).mock.calls[0];
+    expect(spoken).toContain('Le propongo esta lista para su papel.');
+    expect(spoken).not.toMatch(/trámite/i);
+  });
+});
+
 describe('ConfirmationSheet busy answer (field-feedback S8)', () => {
   it('shows "Sí, recuérdeme" busy with its loading symbol while the phone asks', async () => {
     await render(<ConfirmationSheet plan={PLAN} voice={fakeVoice()} reminder={reminderControls('asking')} />);

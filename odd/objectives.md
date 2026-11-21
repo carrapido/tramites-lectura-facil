@@ -10,7 +10,7 @@ And for this session:
 
 ## Index
 
-1. [Spike: one notice end to end](tasks/easyread-spike.md), in progress in another session
+1. [Spike: one notice end to end](tasks/easyread-spike.md) (superseded: the spike session never delivered; objectives 2–10 cover it)
 2. [Repository and walking skeleton](tasks/team-setup.md)
 3. [Document reading with traceable facts](tasks/document-reading.md)
 4. [Plain Spanish and Yucatec Maya text](tasks/indigenous-output.md)

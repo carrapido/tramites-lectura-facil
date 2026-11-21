@@ -40,7 +40,7 @@ Docs: https://docs.expo.dev/eas/index.md
 - Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
 
-## Project rules (easy-read trámites)
+## Project rules (easy reading for any paper)
 
 Feature documents live in `odd/` (ODD). Read `odd/objectives.md` and the current `odd/tasks/<feature>.md` until `## Log` before any work. SDD (`/sdd-*`) is retired.
 
@@ -65,7 +65,7 @@ Sources: Nielsen's 10 heuristics (https://www.nngroup.com/articles/ten-usability
   - Plain Spanish is always shown beside the Maya.
   - Every Maya sentence is labeled "Traducción automática, sin revisar".
   - Every fact keeps its source quote.
-  - Show the notice "Esto no es asesoría legal".
+  - Show the category notice from `CATEGORY_NOTICE` in `src/tramites/category.ts`: "Esto no es asesoría legal" (trámite), "No sustituye a su médico" (salud), "Revise el papel original" (other categories and before reading).
   - Fictitious documents only; never a real CURP or INE.
   - The agent acts only after a big "Sí" confirmation.
 
