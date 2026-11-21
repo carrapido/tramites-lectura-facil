@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     gap: theme.space.sm,
     padding: theme.space.lg,
     borderRadius: theme.radius.card,
-    borderWidth: 1,
+    borderWidth: theme.border.hairline,
     borderColor: theme.color.rule,
   },
   language: { fontSize: theme.type.label, fontWeight: theme.weight.label, color: theme.color.inkMuted },

@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     gap: theme.space.sm,
     paddingHorizontal: theme.space.md,
     borderRadius: theme.radius.button,
-    borderWidth: 1,
+    borderWidth: theme.border.hairline,
     borderColor: theme.color.signal,
   },
   label: { fontSize: theme.type.label, fontWeight: theme.weight.label, color: theme.color.signal },
