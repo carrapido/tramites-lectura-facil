@@ -24,7 +24,7 @@ Roles: **P** = presenter (talks), **O** = operator (holds the phone, mirrored on
 
 **P:** Esta es la app. No pide cuenta ni contraseña. Tiene un solo botón.
 
-**O:** Toca "Tome una foto de su papel". La app explica en voz alta para qué quiere la cámara. Toma la foto del aviso impreso.
+**O:** Toca "Tome una foto de su texto, papel o trámite". La app explica en voz alta para qué quiere la cámara. Toma la foto del aviso impreso.
 
 **P:** El aviso es ficticio. Nunca usamos documentos reales.
 

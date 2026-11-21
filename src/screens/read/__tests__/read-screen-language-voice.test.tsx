@@ -47,7 +47,7 @@ beforeEach(() => {
 describe('"Cambiar idioma" silences the card voice first (PR #7 review, W1)', () => {
   it('releases the playing Maya voice before it opens /idioma', async () => {
     await render(<ReadScreen />);
-    await fireEvent.press(screen.getByRole('button', { name: 'Tome una foto de su papel' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Tome una foto de su texto, papel o trámite' }));
     await fireEvent.press(await screen.findByRole('button', { name: 'Escuchar en maya' }));
     await act(() => player.emit({ playing: true }));
     order.length = 0;

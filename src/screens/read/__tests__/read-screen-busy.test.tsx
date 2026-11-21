@@ -18,7 +18,7 @@ jest.mock('@/screens/easy-read-client', () => ({ fetchEasyRead: jest.fn() }));
 jest.mock('@/screens/plan/plan-client', () => ({ fetchPlan: jest.fn() }));
 jest.mock('@/screens/language/language-store', () => ({ useLanguage: jest.fn(() => 'es') }));
 
-const PHOTO_BUTTON = 'Tome una foto de su papel';
+const PHOTO_BUTTON = 'Tome una foto de su texto, papel o trámite';
 const FACTS = [{ kind: 'fecha', text: 'Vence el 30 de noviembre.', sourceQuote: 'vence el día 30 de noviembre de 2026' }];
 
 /** A promise the test resolves by hand, so it can look at the screen while the app waits. */

@@ -39,7 +39,7 @@ const CARDS: EasyReadCard[] = [
 
 async function takePhoto() {
   await render(<ReadScreen />);
-  await fireEvent.press(screen.getByRole('button', { name: 'Tome una foto de su papel' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Tome una foto de su texto, papel o trámite' }));
 }
 
 beforeEach(() => {

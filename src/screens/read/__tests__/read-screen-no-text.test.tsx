@@ -13,7 +13,7 @@ jest.mock('expo-image-picker', () => ({
 jest.mock('@/screens/read/api-client', () => ({ readNoticePhoto: jest.fn() }));
 jest.mock('@/screens/language/language-store', () => ({ useLanguage: jest.fn(() => 'es') }));
 
-const PHOTO_BUTTON = 'Tome una foto de su papel';
+const PHOTO_BUTTON = 'Tome una foto de su texto, papel o trámite';
 
 beforeEach(() => jest.clearAllMocks());
 

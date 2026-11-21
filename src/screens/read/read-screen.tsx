@@ -80,7 +80,7 @@ export function ReadScreen() {
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
         <ActionButton
-          label="Tome una foto de su papel"
+          label="Tome una foto de su texto, papel o trámite"
           icon={{ ios: 'camera.fill', android: 'photo_camera' }}
           onPress={takePhoto}
           busy={busy}
