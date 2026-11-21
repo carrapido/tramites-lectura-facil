@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import type { NoticeImage, NoticeReader, NoticeReading } from '@/tramites/ports';
 
-import { factSchema, lenientCategorySchema } from './fact-schema';
+import { geminiFactSchema, lenientCategorySchema } from './fact-schema';
 import { GEMINI_MODEL, type GenerateContentClient } from './gemini-writer';
 import { withCredentialMapping } from './google-errors';
 
@@ -30,7 +30,7 @@ const geminiReading = z.object({
   readable: z.boolean(),
   category: lenientCategorySchema,
   transcript: z.string(),
-  facts: z.array(factSchema).max(7),
+  facts: z.array(geminiFactSchema).max(7),
 });
 
 const geminiAnswer = z.object({ text: z.string().min(1) });
