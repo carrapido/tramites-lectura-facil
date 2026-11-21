@@ -2,6 +2,7 @@ import { TranslationServiceClient } from '@google-cloud/translate';
 import { GoogleGenAI } from '@google/genai';
 
 import type { EasyReadDependencies } from '@/tramites/easy-read';
+import type { PlanDependencies } from '@/tramites/plan';
 import type { NoticeReader } from '@/tramites/ports';
 import type { SmokeDependencies } from '@/tramites/smoke';
 import type { VoiceDependencies } from '@/tramites/voice';
@@ -9,10 +10,12 @@ import type { VoiceDependencies } from '@/tramites/voice';
 import { FileAudioCache } from './audio-cache';
 import { CloudTranslator } from './cloud-translator';
 import { GeminiNoticeReader } from './gemini-notice-reader';
+import { GeminiPlanProposer } from './gemini-plan-proposer';
 import { GeminiVoiceSynthesizer } from './gemini-voice';
 import { GeminiPlainLanguageWriter } from './gemini-writer';
 import { readGoogleEnv } from './google-env';
 import { sha256 } from './hash';
+import { localDateIn, NOTICE_TIME_ZONE } from './local-date';
 
 /** One cache per dev-server process, so its memory copy survives across requests. */
 const voiceCache = new FileAudioCache();
@@ -32,6 +35,15 @@ export function composeEasyRead(): EasyReadDependencies {
 export function composeNoticeReader(): NoticeReader {
   const { project, location } = readGoogleEnv(process.env);
   return new GeminiNoticeReader(createGeminiModels(project, location));
+}
+
+/** `today` is read per request, so a dev server left running past midnight stays correct (S3). */
+export function composePlan(): PlanDependencies {
+  const { project, location } = readGoogleEnv(process.env);
+  return {
+    proposer: new GeminiPlanProposer(createGeminiModels(project, location)),
+    today: localDateIn(NOTICE_TIME_ZONE, new Date()),
+  };
 }
 
 export function composeVoice(): VoiceDependencies {
