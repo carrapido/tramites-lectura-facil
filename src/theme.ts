@@ -20,6 +20,8 @@ export const theme = {
   radius: { card: 16, button: 32 },
   border: { hairline: 1, strong: 2 },
   size: { minTarget: 48, primaryTarget: 64, icon: 28, pictogram: 48 },
+  /** Press feedback (field-feedback S7): under 150 ms, strong ease-out, scale never below 0.9. */
+  motion: { pressScale: 0.96, pressOpacity: 0.85, pressMs: 120, pressEasing: [0.23, 1, 0.32, 1] },
   bodyTextPairs: [
     { name: 'ink on paper', foreground: color.ink, background: color.paper },
     { name: 'muted ink on paper', foreground: color.inkMuted, background: color.paper },

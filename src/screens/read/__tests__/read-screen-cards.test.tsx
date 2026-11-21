@@ -81,7 +81,7 @@ describe('ReadScreen easy-read cards (S7, S8, S9)', () => {
     expect(screen.getByText(CARDS[1].plainSpanish)).toBeTruthy();
   });
 
-  it('plays one voice at a time across cards: only the last pressed card shows "Parar"', async () => {
+  it('plays one voice at a time across cards: only the last pressed card shows its busy voice button', async () => {
     await takePhoto();
     await screen.findByText(CARDS[0].plainSpanish);
     jest.mocked(createAudioPlayer).mockImplementation(() => fakeAudioPlayer(() => undefined) as AudioPlayer);
@@ -92,7 +92,8 @@ describe('ReadScreen easy-read cards (S7, S8, S9)', () => {
     expect(jest.mocked(createAudioPlayer).mock.lastCall?.[0]).toEqual(
       expect.objectContaining({ uri: expect.stringContaining(`text=${encodeURIComponent(CARDS[1].plainSpanish)}&lang=es`) }),
     );
-    expect(screen.getAllByRole('button', { name: 'Parar' })).toHaveLength(1);
+    // The laptop voice is still loading, so the button is busy (field-feedback S6/S8) instead of "Parar".
+    expect(screen.getAllByRole('button', { name: 'Preparando la voz.' })).toHaveLength(1);
     expect(screen.getAllByRole('button', { name: 'Escuchar' })).toHaveLength(1);
   });
 });

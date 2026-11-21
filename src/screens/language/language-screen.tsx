@@ -1,11 +1,12 @@
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/back-button';
 import { PlayButton } from '@/components/play-button';
+import { PressableFeedback } from '@/components/pressable-feedback';
 import { MAYA_VOICE_FAILED, type VoiceControls } from '@/components/voice-controls';
 import { useScreenVoice } from '@/screens/voice/use-screen-voice';
 import { MACHINE_VOICE_LABEL } from '@/tramites/voice';
@@ -88,7 +89,7 @@ interface LanguageOptionProps {
 /** The selected option is filled and shows a check, so color is not the only signal. */
 function LanguageOption({ name, a11yLanguage, selected, onPress }: LanguageOptionProps) {
   return (
-    <Pressable
+    <PressableFeedback
       accessibilityRole="button"
       accessibilityLabel={name}
       accessibilityLanguage={a11yLanguage}
@@ -105,7 +106,7 @@ function LanguageOption({ name, a11yLanguage, selected, onPress }: LanguageOptio
         />
       ) : null}
       <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>{name}</Text>
-    </Pressable>
+    </PressableFeedback>
   );
 }
 

@@ -39,7 +39,7 @@ export function HomeScreen() {
           label="Probar Google"
           icon={{ ios: 'paperplane.fill', android: 'send' }}
           onPress={tryGoogle}
-          disabled={busy}
+          busy={busy}
         />
         {smoke && <SmokeResult result={smoke} />}
         <Text style={styles.notice} accessibilityLanguage="es-MX">

@@ -46,14 +46,16 @@ describe('PlayButton (S9: driven by the screen voice, never autoplay)', () => {
     expect(Speech.speak).not.toHaveBeenCalled();
   });
 
-  it('shows "Parar" and "Preparando la voz." while loading, and stops from there', async () => {
+  // field-feedback S6/S8 supersede "Parar" while loading: the button itself is busy and disabled.
+  it('shows a busy "Preparando la voz." button while loading, with no "Parar" yet', async () => {
     const onStop = jest.fn();
     await render(<PlayButton status="loading" onPress={jest.fn()} onStop={onStop} />);
     expect(screen.getByText('Preparando la voz.')).toBeTruthy();
-    const stop = screen.getByRole('button', { name: 'Parar' });
-    expect(stop.props.accessibilityState).toEqual(expect.objectContaining({ busy: true }));
-    await fireEvent.press(stop);
-    expect(onStop).toHaveBeenCalledTimes(1);
+    const busy = screen.getByRole('button', { name: 'Preparando la voz.' });
+    expect(busy.props.accessibilityState).toEqual(expect.objectContaining({ busy: true, disabled: true }));
+    expect(screen.queryByRole('button', { name: 'Parar' })).toBeNull();
+    await fireEvent.press(busy);
+    expect(onStop).not.toHaveBeenCalled();
   });
 
   it('shows "Parar" while playing', async () => {

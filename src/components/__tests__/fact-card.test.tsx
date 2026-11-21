@@ -68,12 +68,17 @@ describe('FactCard in Maaya t\'aan (S8, S9)', () => {
     expect(screen.queryByText('Traducción automática, sin revisar')).toBeNull();
   });
 
-  it('shows the loading state and stops the Maya voice', async () => {
+  // field-feedback S6/S8: while the Maya voice loads, its button is busy; "Parar" comes once it plays.
+  it('shows the Maya loading state as a busy button, then stops the Maya voice from "Parar"', async () => {
     const voice = fakeVoice({ 'c0:yua': 'loading' });
-    await render(<FactCard card={CARD} voiceKey="c0" showMaya voice={voice} />);
-    expect(screen.getByText('Preparando la voz.')).toBeTruthy();
+    const { rerender } = await render(<FactCard card={CARD} voiceKey="c0" showMaya voice={voice} />);
+    expect(screen.getByRole('button', { name: 'Preparando la voz.' }).props.accessibilityState).toEqual(
+      expect.objectContaining({ busy: true, disabled: true }),
+    );
+    const playing = fakeVoice({ 'c0:yua': 'playing' });
+    await rerender(<FactCard card={CARD} voiceKey="c0" showMaya voice={playing} />);
     await fireEvent.press(screen.getByRole('button', { name: 'Parar' }));
-    expect(voice.stop).toHaveBeenCalled();
+    expect(playing.stop).toHaveBeenCalled();
   });
 
   it('says in plain words when the Maya voice is unavailable', async () => {

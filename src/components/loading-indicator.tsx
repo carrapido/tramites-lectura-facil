@@ -1,8 +1,9 @@
 import { SymbolView } from 'expo-symbols';
-import { useEffect, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { theme } from '@/theme';
+
+import { useReduceMotion } from './use-reduce-motion';
 
 /**
  * A large waiting sign with the words of the current step, announced to screen readers
@@ -10,7 +11,6 @@ import { theme } from '@/theme';
  * https://reactnative.dev/docs/activityindicator · https://docs.expo.dev/versions/v58.0.0/sdk/symbols/
  */
 export function LoadingIndicator({ text }: { text: string }) {
-  const reduceMotion = useReduceMotion();
   return (
     <View
       style={styles.box}
@@ -20,52 +20,43 @@ export function LoadingIndicator({ text }: { text: string }) {
       accessibilityLanguage="es-MX"
       accessibilityLiveRegion="polite"
     >
-      {reduceMotion ? <StillIcon /> : <Spinner />}
+      <LoadingSymbol variant="block" color={theme.color.signal} />
       <Text style={styles.text}>{text}</Text>
     </View>
   );
 }
 
 /**
- * Follows the system "reduce motion" setting. Until the phone answers it assumes "on",
- * so a person who asked for no motion never sees the spinner flash.
- * https://reactnative.dev/docs/accessibilityinfo
+ * `block` stands alone on the screen; `inline` sits inside a button, at icon size (S6, S8).
+ * A number size is honored on Android; iOS draws its small spinner inside that box.
  */
-function useReduceMotion(): boolean {
-  const [reduceMotion, setReduceMotion] = useState(true);
+const SYMBOL_VARIANT = {
+  block: { spinnerSize: 'large', stillSize: theme.size.pictogram, testIDPrefix: 'loading' },
+  inline: { spinnerSize: theme.size.icon, stillSize: theme.size.icon, testIDPrefix: 'button' },
+} as const;
 
-  useEffect(() => {
-    let mounted = true;
-    AccessibilityInfo.isReduceMotionEnabled()
-      .then((enabled) => {
-        if (mounted) setReduceMotion(enabled);
-      })
-      .catch(() => undefined);
-    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
-    return () => {
-      mounted = false;
-      subscription.remove();
-    };
-  }, []);
-
-  return reduceMotion;
+interface LoadingSymbolProps {
+  variant: keyof typeof SYMBOL_VARIANT;
+  color: string;
 }
 
-function Spinner() {
-  return <ActivityIndicator testID="loading-spinner" size="large" color={theme.color.signal} />;
-}
-
-function StillIcon() {
-  return (
-    <View testID="loading-still">
-      <SymbolView
-        name={{ ios: 'hourglass', android: 'hourglass_empty' }}
-        size={theme.size.pictogram}
-        tintColor={theme.color.signal}
-        fallback={null}
-      />
-    </View>
-  );
+/** The one loading symbol of the app: a spinner, or a still hourglass with reduce motion on. */
+export function LoadingSymbol({ variant, color }: LoadingSymbolProps) {
+  const reduceMotion = useReduceMotion();
+  const { spinnerSize, stillSize, testIDPrefix } = SYMBOL_VARIANT[variant];
+  if (reduceMotion) {
+    return (
+      <View testID={`${testIDPrefix}-still`}>
+        <SymbolView
+          name={{ ios: 'hourglass', android: 'hourglass_empty' }}
+          size={stillSize}
+          tintColor={color}
+          fallback={null}
+        />
+      </View>
+    );
+  }
+  return <ActivityIndicator testID={`${testIDPrefix}-spinner`} size={spinnerSize} color={color} />;
 }
 
 const styles = StyleSheet.create({
