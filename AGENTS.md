@@ -87,3 +87,14 @@ unslop (Damir Sokolovsky, CC BY 4.0, https://github.com/heydamir/unslop) lives i
 - **Citations.** Cite the official doc page for every API or setting you introduce: in code comments only where the reason is not obvious, always in your report. Use version-pinned Expo pages (`https://docs.expo.dev/versions/v58.0.0/...`).
 - **Commits.** Conventional Commits. No Co-Authored-By, "Generated with" or other AI attribution. Never commit secrets or `.env*.local`.
 - **Communication.** Speak to the team in Mexican Spanish with "tú". Code, comments, docs and commits in English. One question at a time.
+
+### Parallel work (two laptops, two Claude accounts)
+
+GitHub is the only channel between machines. Agents never talk to each other directly.
+
+1. **Claim before you start.** `git pull`, pick a `pending` objective in `odd/objectives.md`, then on `main` set its front-matter to `status: in-progress` and add `owner: <github-user>`. Commit `chore(odd): claim <feature>` and push. If the push is rejected, pull: someone else may have claimed it. Pick another one.
+2. **One branch per objective:** `feat/<feature>` (for example `feat/accessible-ui`). Never work on an objective another owner claimed.
+3. **Shared files** (`src/theme.ts`, `src/tramites/ports.ts`, `AGENTS.md`, `package.json`): keep edits small, pull and rebase on `main` before touching them, and mention them in the PR description.
+4. **Handoff lives in the Log** of `odd/tasks/<feature>.md`: what works, pending checks, next step. Read the other objective's Log before depending on it.
+5. **Deliver through a pull request** to `main`. The other owner reviews it. Merge only with `npm test` green.
+6. **Each laptop runs its own dev server** (`npx expo start`); each phone scans its own laptop's QR code.
