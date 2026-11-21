@@ -1,12 +1,13 @@
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import * as Speech from 'expo-speech';
 import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ActionButton } from '@/components/action-button';
+import { FactCard } from '@/components/fact-card';
 import { SecondaryButton } from '@/components/secondary-button';
 import { theme } from '@/theme';
 
@@ -57,6 +58,11 @@ export function ReadScreen() {
         <Text style={styles.notice} accessibilityLanguage="es-MX">
           Esto no es asesoría legal
         </Text>
+        <SecondaryButton
+          label="Cambiar idioma"
+          icon={{ ios: 'globe', android: 'language' }}
+          onPress={() => router.push('/idioma')}
+        />
         <Link href="./diagnostico" asChild>
           <SecondaryButton label="Ver conexión" icon={{ ios: 'wifi', android: 'wifi' }} />
         </Link>
@@ -189,42 +195,11 @@ function ReadResult({ state }: { state: ReadState }) {
   return null;
 }
 
-function FactCard({ fact }: { fact: ReadFact }) {
-  const [sourceVisible, setSourceVisible] = useState(false);
-  return (
-    <View style={styles.card}>
-      <Text style={styles.body} accessibilityLanguage="es-MX">
-        {fact.text}
-      </Text>
-      {sourceVisible ? (
-        <Text style={styles.quote} accessibilityLanguage="es-MX">
-          {fact.sourceQuote}
-        </Text>
-      ) : (
-        <SecondaryButton
-          label="¿De dónde salió?"
-          icon={{ ios: 'text.quote', android: 'format_quote' }}
-          onPress={() => setSourceVisible(true)}
-        />
-      )}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.color.paper },
   content: { padding: theme.space.lg, gap: theme.space.lg },
   status: { fontSize: theme.type.body, color: theme.color.ink },
   facts: { gap: theme.space.md },
-  card: {
-    gap: theme.space.md,
-    padding: theme.space.lg,
-    borderRadius: theme.radius.card,
-    borderWidth: 1,
-    borderColor: theme.color.rule,
-  },
-  body: { fontSize: theme.type.body, color: theme.color.ink },
-  quote: { fontSize: theme.type.body, fontStyle: 'italic', color: theme.color.inkMuted },
   error: { fontSize: theme.type.body, color: theme.color.danger },
   notice: { fontSize: theme.type.label, color: theme.color.inkMuted },
 });

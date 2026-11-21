@@ -30,11 +30,11 @@ Accounts, login, form filling, web build.
 
 ## Tasks
 
-- [ ] T1 (S1, S2), inline: `PlayButton` "Escuchar"; role, label, language and 48 dp pinned for every button.
-- [ ] T2 (S3), inline: `SpanishText` (`es-MX`) and `MayaText` (`yua`, labeled "Traducción automática, sin revisar").
-- [ ] T3 (S4), inline: `/idioma` picker (Español, Maaya t'aan, each with a sample), remembered choice, "Cambiar idioma" on the read screen, no `TextInput` anywhere.
-- [ ] T4 (S5), inline: `FactCard` with icon, sentence, "Escuchar" and "¿De dónde salió?"; used by the read screen.
-- [ ] T5 (S6), inline: guard against `allowFontScaling={false}`; 200% font scale checked on one Android and one iOS phone (device, pending).
+- [x] T1 (S1, S2), inline: `PlayButton` "Escuchar"; role, label, language and 48 dp pinned for every button.
+- [x] T2 (S3), inline: `SpanishText` (`es-MX`) and `MayaText` (`yua`, labeled "Traducción automática, sin revisar").
+- [x] T3 (S4), inline: `/idioma` picker (Español, Maaya t'aan, each with a sample), remembered choice, "Cambiar idioma" on the read screen, no `TextInput` anywhere.
+- [x] T4 (S5), inline: `FactCard` with icon, sentence, "Escuchar" and "¿De dónde salió?"; used by the read screen.
+- [ ] T5 (S6), inline (guard done; device check pending): guard against `allowFontScaling={false}`; 200% font scale checked on one Android and one iOS phone (device, pending).
 
 Route: every task inline; no Writer trigger (one dependent behavior chain, units under ~100 lines each).
 
@@ -49,3 +49,7 @@ Route: every task inline; no Writer trigger (one dependent behavior chain, units
   - The box in "¿De dónde salió?" is not shown: the app client (`src/screens/read/api-client.ts`, objective 3) drops `box`. The quote is shown.
   - Card icons use `expo-symbols` at 48 dp. ARASAAC pictograms and the agent confirmation sheet are left for objectives 8 and 7.
   - `src/screens/read/read-screen.tsx` (objective 3) changes only so it uses the new `FactCard` and shows "Cambiar idioma". Its reviewed tests stay untouched and green.
+- **L4 (RED):** ecb8f57. 6 new suites fail because their modules are missing; the 66 earlier tests stay green. `src/__tests__/oral-first.test.ts` (no `TextInput`, no `allowFontScaling={false}`) passes from the start, because it guards rules the code already keeps. `expo-sqlite` was added with `npx expo install` (`package.json`, `app.json` plugin).
+- **L5 (GREEN):** `PlayButton`, `SpanishText`/`MayaText`, `FactCard` (icon by kind prefix, 48 dp `theme.size.pictogram`), `language-store` (Zod enum, Spanish fallback on an unknown value or a read error), `/idioma` picker (filled option with a check icon, so color is not the only signal; `accessibilityState.selected`). The read screen uses `FactCard` and a "Cambiar idioma" button. It uses `router.push`, because `<Link asChild>` sets `role="link"` and overrides the button role. 95/95 tests, `tsc --noEmit`, `expo lint` and `expo-doctor` (20/20) all clean. Existing read-screen tests were not edited.
+- **L6 (pending device checks):** S3: how VoiceOver and TalkBack pronounce `yua` text. S6: 200% system font on one Android and one iOS phone with no clipping (read screen, fact cards, `/idioma`). S4: the choice survives an app restart in Expo Go. T5 stays open until then.
+- **Handoff:** objective 4 renders Maya with `MayaText` next to `SpanishText`. Objective 5 can replace `speakAloud` in `src/components/play-button.tsx`. To show the box in "¿De dónde salió?", objective 3's client must keep `box` and pass the photo URI.
