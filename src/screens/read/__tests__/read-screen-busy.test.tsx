@@ -44,7 +44,7 @@ describe('the photo button stays busy during the photo flow (field-feedback S8)'
     await render(<ReadScreen />);
     void fireEvent.press(screen.getByRole('button', { name: PHOTO_BUTTON }));
 
-    await screen.findByRole('progressbar', { name: 'Leyendo su papel.' });
+    await screen.findByRole('progressbar', { name: 'Leyendo.' });
     expect(screen.getByRole('button', { name: PHOTO_BUTTON }).props.accessibilityState).toEqual(
       expect.objectContaining({ disabled: true, busy: true }),
     );
