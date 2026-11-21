@@ -5,6 +5,7 @@ import type { NoticeReader } from '@/tramites/ports';
 import { readNotice } from '@/tramites/read-notice';
 
 import { composeOrNull } from './compose-or-null';
+import { replayedField } from './demo-mode';
 import { configMissingResponse, googleFailureResponse } from './failure-response';
 import { declaresOversizedBody, invalidRequestResponse, jsonOrNull } from './request-body';
 
@@ -19,8 +20,8 @@ const readRequest = z.object({
   mimeType: z.enum(['image/jpeg', 'image/png']),
 });
 
-/** POST /api/read: photo in, traceable facts out (S1-S4). */
-export async function handleRead(request: Request, compose: () => NoticeReader): Promise<Response> {
+/** POST /api/read: photo in, traceable facts out (S1-S4). `replayed` marks a demo replay answer. */
+export async function handleRead(request: Request, compose: () => NoticeReader, replayed = false): Promise<Response> {
   if (declaresOversizedBody(request, MAX_REQUEST_BYTES)) return invalidRequestResponse();
   const body = readRequest.safeParse(await jsonOrNull(request));
   if (!body.success) return invalidRequestResponse();
@@ -30,7 +31,7 @@ export async function handleRead(request: Request, compose: () => NoticeReader):
 
   try {
     const facts = await readNotice(reader, { base64: body.data.imageBase64, mimeType: body.data.mimeType });
-    return Response.json({ ok: true, facts });
+    return Response.json({ ok: true, facts, ...replayedField(replayed) });
   } catch (error) {
     if (error instanceof UnreadableNoticeError) return Response.json({ ok: false, reason: 'unreadable' }, { status: 422 });
     return googleFailureResponse(error, 'read');

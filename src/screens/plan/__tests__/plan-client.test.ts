@@ -66,3 +66,10 @@ describe('fetchPlan (S7)', () => {
     expect(signal?.aborted).toBe(true);
   });
 });
+
+describe('fetchPlan in demo replay (S5)', () => {
+  it('passes replayed: true through', async () => {
+    global.fetch = jest.fn(async () => Response.json({ ok: true, plan: PLAN, replayed: true }));
+    expect(await fetchPlan(FACTS)).toEqual({ ok: true, plan: PLAN, replayed: true });
+  });
+});

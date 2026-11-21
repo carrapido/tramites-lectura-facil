@@ -54,7 +54,10 @@
     "lint": "expo lint",
     "test": "jest",
     "typecheck": "tsc --noEmit",
-    "setup": "bash scripts/setup.sh"
+    "setup": "bash scripts/setup.sh",
+    "demo:record": "DEMO_RECORD=1 expo start",
+    "demo:replay": "DEMO_REPLAY=1 expo start",
+    "demo:warmup": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/demo-warmup.ts"
   },
   "private": true,
   "engines": {

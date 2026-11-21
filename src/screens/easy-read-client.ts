@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { postJson, serverReason, type ClientFailure } from '@/screens/post-json';
+import { postJson, replayedFlag, serverReason, type ClientFailure } from '@/screens/post-json';
 import type { EasyReadCard } from '@/tramites/easy-read';
 import type { Fact } from '@/tramites/ports';
 
@@ -9,7 +9,8 @@ export const EASY_READ_DEADLINE_MS = 20_000;
 
 export type EasyReadFailure = ClientFailure;
 
-export type EasyReadResult = { ok: true; cards: EasyReadCard[] } | { ok: false; reason: EasyReadFailure };
+/** `replayed: true` means a demo recording answered: show REPLAY_LABEL. */
+export type EasyReadResult = { ok: true; cards: EasyReadCard[]; replayed?: boolean } | { ok: false; reason: EasyReadFailure };
 
 const unit = z.number().min(0).max(1);
 
@@ -23,7 +24,7 @@ const card = z.object({
 });
 
 const easyReadBody = z.discriminatedUnion('ok', [
-  z.object({ ok: z.literal(true), cards: z.array(card) }),
+  z.object({ ok: z.literal(true), cards: z.array(card), replayed: replayedFlag }),
   z.object({ ok: z.literal(false), reason: serverReason }),
 ]);
 

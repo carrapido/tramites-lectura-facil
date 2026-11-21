@@ -3,12 +3,24 @@ import { z } from 'zod';
 import { apiUrl } from '@/screens/api-url';
 
 /** Failures the app has a message for; anything else from the server becomes bad-response. */
-export type ClientFailure = 'invalid-request' | 'adc-missing' | 'config-missing' | 'timeout' | 'unreachable' | 'bad-response';
+export type ClientFailure =
+  | 'invalid-request'
+  | 'adc-missing'
+  | 'config-missing'
+  | 'not-recorded'
+  | 'timeout'
+  | 'unreachable'
+  | 'bad-response';
 
 export type TransportFailure = { ok: false; reason: Extract<ClientFailure, 'timeout' | 'unreachable' | 'bad-response'> };
 
-/** Any reason the UI has no message for, such as upstream-failed, becomes bad-response. */
-export const serverReason = z.enum(['invalid-request', 'adc-missing', 'config-missing', 'bad-response']).catch('bad-response');
+/** Any reason the UI has no message for, such as upstream-failed, becomes bad-response. not-recorded comes from demo replay. */
+export const serverReason = z
+  .enum(['invalid-request', 'adc-missing', 'config-missing', 'not-recorded', 'bad-response'])
+  .catch('bad-response');
+
+/** Demo replay marks its answers; absent on live answers. Show REPLAY_LABEL when true. */
+export const replayedFlag = z.boolean().optional();
 
 /**
  * POSTs JSON to a laptop API route and validates the answer with `schema`.
