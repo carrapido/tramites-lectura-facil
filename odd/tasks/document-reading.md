@@ -24,3 +24,8 @@ Translation and voice (objectives 4 and 5).
 ## Log
 
 - **L1 (user, verbatim):** "Continuar con el borrador dado" — specs S1–S6 above are the agent's draft, approved by the user as written.
+- **L2 (RED):** c16de79 — 3 suites failing (modules missing), 27 prior tests green.
+- **L3 (GREEN):** worker implemented domain `readNotice`, `GeminiNoticeReader`, `POST /api/read`, `ReadScreen` (index route; diagnostics moved to `/diagnostico`). 44/44 tests, tsc and lint clean.
+- **L4 (S5 real smoke):** first call failed `Error: Request timed out` (ETIMEDOUT): Expo server fetch (`fetch-nodeshim`) has a 30 s socket timeout and Gemini 3 with image + default thinking exceeded it. Fix: `thinkingConfig: { thinkingLevel: LOW }`. Then 200 in 10.9 s with 5 facts, every `sourceQuote` literal in the notice.
+- **L5 (pending):** S6 on a real phone in Expo Go (spoken reason, permission, camera, HEIC on iPhone returns JPEG base64). Status stays in-progress until then.
+- **Next objective:** 4, Plain Spanish and Yucatec Maya text (`indigenous-output.md`). Not started.

@@ -1,5 +1,6 @@
-import Constants from 'expo-constants';
 import { z } from 'zod';
+
+import { apiUrl } from '@/screens/api-url';
 
 const healthBody = z.object({ ok: z.literal(true) });
 const smokeBody = z.discriminatedUnion('ok', [
@@ -25,11 +26,4 @@ export async function runSmoke(): Promise<SmokeBody> {
   } catch {
     return { ok: false, reason: 'unreachable' };
   }
-}
-
-/** In Expo Go the API routes live on the laptop dev server: the same host that serves the bundle. */
-function apiUrl(path: string): string {
-  // https://docs.expo.dev/versions/v58.0.0/sdk/constants/
-  const host = Constants.expoConfig?.hostUri ?? 'localhost:8081';
-  return `http://${host}${path}`;
 }

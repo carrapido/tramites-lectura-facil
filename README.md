@@ -22,6 +22,15 @@ A phone photo of a Mexican government notice becomes short fact cards in plain S
    ```
    The screen shows "conectado" when the phone reaches `GET /api/health` on the laptop. "Probar Google" calls `GET /api/smoke` (Gemini + Cloud Translation).
 
+## Read a notice
+
+1. Run `npx expo start` and open the app in Expo Go.
+2. Tap "Tome una foto de su papel". The phone says why it needs the camera, then asks for permission.
+3. Photograph a fictitious notice (try `fixtures/aviso-ficticio.jpg`). The laptop sends it to Gemini through `POST /api/read`.
+4. Each card shows one short fact. "¿De dónde salió?" reveals the literal quote of the notice. Facts without a literal quote are never shown.
+
+"Ver conexión" opens the diagnostics screen (`/diagnostico`).
+
 ## When the event Wi-Fi blocks phone-to-laptop traffic
 
 - Tunnel: `npx expo start --tunnel` (https://docs.expo.dev/versions/v58.0.0/more/expo-cli/).
@@ -44,3 +53,7 @@ A phone photo of a Mexican government notice becomes short fact cards in plain S
 ## Credits
 
 unslop skill in `.agents/skills/unslop` by Damir Sokolovsky, CC BY 4.0 (https://github.com/heydamir/unslop).
+
+## Teammate setup
+
+`npm run setup` checks Node 24 and gcloud ADC, writes a git-ignored local env file from your gcloud project, then runs `npm ci` and `npm test`.

@@ -1,1 +1,1 @@
-export { HomeScreen as default } from '@/screens/home/home-screen';
+export { ReadScreen as default } from '@/screens/read/read-screen';

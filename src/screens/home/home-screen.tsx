@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ActionButton } from '@/components/action-button';
+import { BackButton } from '@/components/back-button';
 import { theme } from '@/theme';
 
 import { checkHealth, runSmoke, type SmokeBody } from './api-client';
@@ -29,6 +30,7 @@ export function HomeScreen() {
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
+        <BackButton />
         <Text style={styles.status} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
           {CONNECTION_TEXT[connection]}
         </Text>

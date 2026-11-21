@@ -5,3 +5,11 @@ export class CredentialsUnavailableError extends Error {
     this.name = 'CredentialsUnavailableError';
   }
 }
+
+/** The photo cannot be read, or nothing in it could be traced to a literal quote. */
+export class UnreadableNoticeError extends Error {
+  constructor() {
+    super('The notice photo is unreadable');
+    this.name = 'UnreadableNoticeError';
+  }
+}
