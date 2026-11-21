@@ -1,59 +1,71 @@
 {
   "readable": true,
-  "transcript": "AYUNTAMIENTO FICTICIO DE SAN ISIDRO DEL MAR\nAVISO DE COBRO DE IMPUESTO PREDIAL 2026\nEstimado contribuyente: Juana Pérez Ejemplo\nSe le notifica que el pago del impuesto predial correspondiente al ejercicio 2026 vence el día 30 de noviembre de 2026.\nEl monto a pagar es de $1,250.00 (mil doscientos cincuenta pesos 00/100 M.N.).\nDeberá presentarse en la Tesorería Municipal, ubicada en Calle 60 número 100, Centro, de lunes a viernes de 8:00 a 14:00 horas.\nPresente este aviso y una identificación oficial.\nEn caso de no realizar el pago en la fecha indicada se generarán recargos del 2% mensual.\nDOCUMENTO FICTICIO PARA PRUEBAS. NO ES UN AVISO REAL.",
+  "category": "tramite",
+  "transcript": "AYUNTAMIENTO FICTICIO DE SAN ISIDRO DEL MAR\nAVISO DE COBRO DE IMPUESTO PREDIAL 2026\nEstimado contribuyente: Juana Pérez Ejemplo\nSe le notifica que el pago del impuesto predial correspondiente al ejercicio 2026\nvence el día 30 de noviembre de 2026.\nEl monto a pagar es de $1,250.00 (mil doscientos cincuenta pesos 00/100 M.N.).\nDeberá presentarse en la Tesorería Municipal, ubicada en Calle 60 número 100,\nCentro, de lunes a viernes de 8:00 a 14:00 horas.\nPresente este aviso y una identificación oficial.\nEn caso de no realizar el pago en la fecha indicada se generarán recargos del\n2% mensual.\nDOCUMENTO FICTICIO PARA PRUEBAS. NO ES UN AVISO REAL.",
   "facts": [
     {
       "kind": "fecha",
-      "text": "Usted tiene hasta el 30 de noviembre de 2026 para pagar.",
+      "text": "Usted tiene como fecha límite de pago el 30 de noviembre de 2026.",
       "sourceQuote": "vence el día 30 de noviembre de 2026.",
       "box": {
         "x": 0.057,
         "y": 0.231,
-        "width": 0.426,
-        "height": 0.026
+        "width": 0.428,
+        "height": 0.024
       }
     },
     {
       "kind": "monto",
       "text": "Usted debe pagar la cantidad de $1,250.00 pesos.",
-      "sourceQuote": "El monto a pagar es de $1,250.00 (mil doscientos cincuenta pesos 00/100 M.N.).",
+      "sourceQuote": "El monto a pagar es de $1,250.00",
       "box": {
         "x": 0.057,
         "y": 0.274,
-        "width": 0.887,
-        "height": 0.026
+        "width": 0.368,
+        "height": 0.023
       }
     },
     {
       "kind": "lugar",
       "text": "Usted debe acudir a la Tesorería Municipal en Calle 60 número 100, Centro.",
-      "sourceQuote": "Tesorería Municipal, ubicada en Calle 60 número 100, Centro,",
+      "sourceQuote": "Tesorería Municipal, ubicada en Calle 60 número 100,\nCentro",
       "box": {
         "x": 0.334,
         "y": 0.316,
         "width": 0.598,
-        "height": 0.069
+        "height": 0.066
+      }
+    },
+    {
+      "kind": "hora",
+      "text": "Usted puede presentarse de lunes a viernes de 8:00 a 14:00 horas.",
+      "sourceQuote": "de lunes a viernes de 8:00 a 14:00 horas.",
+      "box": {
+        "x": 0.141,
+        "y": 0.358,
+        "width": 0.453,
+        "height": 0.023
       }
     },
     {
       "kind": "documento",
-      "text": "Usted debe presentar este aviso y una identificación oficial.",
+      "text": "Usted debe presentar este aviso de cobro y su identificación oficial.",
       "sourceQuote": "Presente este aviso y una identificación oficial.",
       "box": {
         "x": 0.057,
-        "y": 0.402,
+        "y": 0.401,
         "width": 0.518,
-        "height": 0.025
+        "height": 0.024
       }
     },
     {
       "kind": "consecuencia",
-      "text": "Si usted no paga a tiempo, se le cobrarán recargos del 2% mensual.",
-      "sourceQuote": "se generarán recargos del 2% mensual.",
+      "text": "Si usted no paga a tiempo, se le cobrará un 2% de recargo mensual.",
+      "sourceQuote": "se generarán recargos del\n2% mensual.",
       "box": {
         "x": 0.057,
-        "y": 0.444,
-        "width": 0.837,
+        "y": 0.443,
+        "width": 0.838,
         "height": 0.068
       }
     }

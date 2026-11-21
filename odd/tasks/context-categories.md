@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: done
 owner: carrapido
 ---
 
@@ -45,3 +45,7 @@ Typed or pasted text input (photo only), new categories beyond the list, per-cat
   - S1: the `oral-first` guard scans all of `src/` except `__tests__` and `server`, so it covers `src/screens` and `src/components`; still green.
   - GREEN: `npx jest` 58 suites, 405 tests passed; `npx tsc --noEmit` and `npx expo lint` clean.
   - Pending: S6 fixtures and docs, S7 smoke calls, a phone check of the row and notice.
+- **L6 (parent fixes):** reminder bodies "Mañana vence: …" / "Hoy vence: …" → "Mañana: …" / "Hoy: …" so they fit a meeting too (S5; assertions in `plan.test.ts` and `notification-scheduler.test.ts` updated for that reason only); the diagnostics screen shows `NOTICE_BEFORE_READING` instead of the fixed legal notice (its one assertion updated). 405/405 tests, tsc and lint clean.
+- **L7 (S7 real smoke, port 8082, record mode):** `fixtures/invitacion-ficticia.jpg` → `category: "reunion"`, 5 traceable facts, plan with "Lleve usted su recibo de agua más reciente." and reminder 2026-12-05 at "Casa ejidal, Calle 21 número 45". Finding: one fact text says "recibo de agua potable" while its quote says "recibo de agua" (word taken from elsewhere in the paper). `fixtures/aviso-ficticio.jpg` → `category: "tramite"`, 6 facts, 6 Maya voices, plan without "vigente" ("Presente usted este aviso y una identificación oficial."; PR #10's rule works).
+- **L8 (S6):** recordings re-made with the category and PR #10's instruction; replay → 5 `OK … replayed`, `category: "tramite"`. Limitation: replay answers with the notice for any photo (a phone photo never matches byte for byte), so the invitation is live-only; written in the runbook and the pitch. Pitch, README and runbook now present the app as an inclusion tool for any paper. S6 amended in practice: the invitation's easy-read, voice and plan are recorded, but its reading is not replayable.
+- **Next:** phone checks for the category row and notices (Dean-koro, issue #4); consider a domain check that flags fact words absent from the quote ("potable", "vigente").

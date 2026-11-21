@@ -1,6 +1,6 @@
-# Trámites en lectura fácil
+# Lectura fácil para cualquier papel
 
-A phone photo of a Mexican government notice becomes short fact cards in plain Spanish and Yucatec Maya, with voice. Hackathon project. Specs and progress live in [`odd/`](odd/objectives.md).
+An inclusion tool for quick, concise reading: a phone photo of any paper (an official notice, a meeting invitation, a prescription, a note) is classified by its context (`tramite`, `reunion`, `salud`, `nota`, `otro`) and becomes short fact cards in plain Spanish and Yucatec Maya, with voice. Hackathon project. Specs and progress live in [`odd/`](odd/objectives.md).
 
 ## Run it in 15 minutes (macOS or Linux)
 

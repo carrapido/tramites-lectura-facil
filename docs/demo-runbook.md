@@ -24,7 +24,7 @@ The full demo needs issue #4 step 3 (cards in both languages, "Escuchar" with bo
 3. Live check: `npm start` (or `npx expo start`), then `npm run demo:warmup`. Expect five `OK` lines.
 4. If the recordings in `fixtures/demo/` are missing or stale: stop the server, run `npm run demo:record`, then `npm run demo:warmup`, then play every card's Maya voice once in the app. Commit the new recordings only if they hold fictitious data.
 5. Replay check: stop the server, run `npm run demo:replay`, then `npm run demo:warmup`. Expect five `OK … replayed` lines.
-6. Print `fixtures/aviso-ficticio.jpg` on paper, about letter size, and test a photo under the stage light.
+6. Print `fixtures/aviso-ficticio.jpg` (category `tramite`) and `fixtures/invitacion-ficticia.jpg` (category `reunion`) on paper, about letter size, and test a photo of each under the stage light. Replay mode answers with the notice for any photo, so the invitation beat in the script is live-only.
 7. Screen mirroring: iPhone with QuickTime (cable, File → New Movie Recording → choose the phone); Android with `scrcpy` over USB. Test it on the projector.
 
 ## T-15 minutes

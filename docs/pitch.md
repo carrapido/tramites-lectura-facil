@@ -1,4 +1,4 @@
-# Pitch: Trámites en lectura fácil (5 minutos)
+# Pitch: Lectura fácil para cualquier papel (5 minutos)
 
 Spoken script in Spanish for the live pitch on 2026-11-21 at 12:00 (UTC-5). Lines marked **[CORTE 3 MIN]** are dropped to fit 3 minutes. Every number cites its source at the end; do not add numbers that are not listed there. The demo steps follow `docs/demo-runbook.md`.
 
@@ -8,13 +8,13 @@ Roles: **P** = presenter (talks), **O** = operator (holds the phone, mirrored on
 
 ## 1. Problema (0:00 – 0:45)
 
-**P:** Imaginen recibir un papel del gobierno que no pueden leer.
+**P:** Imaginen recibir un papel que no pueden leer: un aviso del gobierno, una receta, una invitación.
 
 **P:** En México, 7.3 millones de personas hablan una lengua indígena. 866 mil no hablan español. [1]
 
 **P:** El maya es la segunda lengua indígena del país: 774 mil hablantes. [1][2]
 
-**P:** Y los avisos de trámites llegan en un español difícil, de oficina. **[CORTE 3 MIN]** Una de cada cinco personas hablantes de lengua indígena no sabe leer. [3] **[/CORTE]**
+**P:** Y esos papeles llegan en un español difícil, de oficina. **[CORTE 3 MIN]** Una de cada cinco personas hablantes de lengua indígena no sabe leer. [3] **[/CORTE]**
 
 **P:** Las personas mayores tampoco tienen fácil el camino digital: solo 3 de cada 10 personas de 75 años o más usan internet. [4]
 
@@ -28,7 +28,9 @@ Roles: **P** = presenter (talks), **O** = operator (holds the phone, mirrored on
 
 **P:** El aviso es ficticio. Nunca usamos documentos reales.
 
-**O:** Aparecen las tarjetas.
+**O:** Aparecen el tipo de papel y las tarjetas.
+
+**P:** Primero dice qué tipo de papel es: un trámite. Por eso avisa: "Esto no es asesoría legal".
 
 **P:** Cada tarjeta es una sola idea, en frases cortas y con "usted". Fecha, monto, lugar, qué llevar.
 
@@ -54,13 +56,17 @@ Roles: **P** = presenter (talks), **O** = operator (holds the phone, mirrored on
 
 **P:** Solo después del "Sí", el teléfono avisa un día antes y el mismo día en la mañana.
 
+**O:** Toma la foto de la invitación impresa (solo en vivo; en modo grabado se omite).
+
+**P:** No es solo para trámites. Esta es una invitación a una reunión de vecinos: la app la reconoce como "Reunión" y propone el recordatorio.
+
 **[/CORTE]**
 
 ## 3. Cómo funciona (3:15 – 4:00)
 
 **P:** La foto va a una laptop del equipo, no a la nube del teléfono. **[CORTE 3 MIN]** No guardamos llaves en el teléfono: las credenciales de Google viven solo en la laptop. **[/CORTE]**
 
-**P:** Gemini lee el aviso y extrae los datos, cada uno con su cita literal. Una regla del código descarta lo que no tenga cita.
+**P:** Gemini lee el papel, decide de qué tipo es y extrae los datos, cada uno con su cita literal. Una regla del código descarta lo que no tenga cita.
 
 **P:** Cloud Translation lo pasa a maya, y Gemini le pone voz. El español usa la voz del propio teléfono, sin internet.
 
@@ -70,11 +76,11 @@ Roles: **P** = presenter (talks), **O** = operator (holds the phone, mirrored on
 
 **P:** Somos honestos con los límites. No tenemos todavía una persona hablante de maya en el equipo. El maya y su voz son automáticos y van marcados "sin revisar".
 
-**P:** La app no es asesoría legal, y lo dice en cada pantalla.
+**P:** Cada pantalla avisa según el papel: en trámites, que no es asesoría legal; en salud, que no sustituye al médico; en todo lo demás, que revise el papel original.
 
 **P:** Lo siguiente: que hablantes de maya revisen las frases, y llevar el mismo flujo al náhuatl, la lengua indígena más hablada. [1]
 
-**P:** Queremos que un papel del gobierno deje de ser un muro. Que se pueda escuchar, entender y cumplir a tiempo. Gracias.
+**P:** Queremos que ningún papel sea un muro. Que se pueda escuchar, entender y cumplir a tiempo. Gracias.
 
 ---
 

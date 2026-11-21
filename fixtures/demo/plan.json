@@ -17,8 +17,44 @@
     "reminder": {
       "dueDate": "2026-11-30",
       "title": "Pago en Tesorería Municipal",
+      "place": "Tesorería Municipal, Calle 60 número 100, Centro",
+      "sourceQuote": "vence el día 30 de noviembre de 2026."
+    }
+  },
+  "cccb6151ebfb2e8d47e0c4727272fd19f7d972fa89af9d63897bffbef7d2d7f4": {
+    "checklist": [
+      {
+        "text": "Pague usted el monto de $1,250.00.",
+        "sourceQuote": "El monto a pagar es de $1,250.00"
+      },
+      {
+        "text": "Acuda usted a la Tesorería Municipal en Calle 60 número 100, Centro.",
+        "sourceQuote": "Tesorería Municipal, ubicada en Calle 60 número 100,\\nCentro"
+      },
+      {
+        "text": "Presente usted este aviso y una identificación oficial.",
+        "sourceQuote": "Presente este aviso y una identificación oficial."
+      }
+    ],
+    "reminder": {
+      "dueDate": "2026-11-30",
+      "title": "Fecha límite de pago",
       "sourceQuote": "vence el día 30 de noviembre de 2026.",
-      "place": "Tesorería Municipal, Calle 60 número 100, Centro"
+      "place": "Tesorería Municipal, ubicada en Calle 60 número 100, Centro"
+    }
+  },
+  "eca86cdf90b7ece0f5dbb177f1cef82167ea82a6c693b3150ccdc442d514159c": {
+    "checklist": [
+      {
+        "text": "Lleve usted su recibo de agua más reciente.",
+        "sourceQuote": "Favor de traer su recibo de agua más reciente."
+      }
+    ],
+    "reminder": {
+      "dueDate": "2026-12-05",
+      "title": "Reunión",
+      "place": "Casa ejidal, Calle 21 número 45",
+      "sourceQuote": "Fecha: sábado 5 de diciembre de 2026, a las 17:00 horas."
     }
   }
 }
