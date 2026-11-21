@@ -1,11 +1,11 @@
 import { CredentialsUnavailableError } from './errors';
 import type { BatchTranslator, Fact, FactBox, PlainLanguageWriter } from './ports';
+import { countWords, MAX_PLAIN_WORDS } from './text-rules';
+
+export { MAX_PLAIN_WORDS } from './text-rules';
 
 /** The UI shows this under every Maya sentence (S4). */
 export const MACHINE_TRANSLATION_LABEL = 'Traducción automática, sin revisar';
-
-/** Plain Spanish sentences have this many words or fewer (S3). */
-export const MAX_PLAIN_WORDS = 15;
 
 export type MayaStatus = 'machine-unreviewed' | 'unavailable';
 
@@ -57,9 +57,4 @@ function toCard({ kind, sourceQuote, box }: Fact, plainSpanish: string, maya: st
     sourceQuote,
   };
   return box ? { ...card, box } : card;
-}
-
-/** Words are whitespace-separated tokens. */
-function countWords(text: string): number {
-  return text.split(/\s+/).filter((word) => word.length > 0).length;
 }
