@@ -1,3 +1,4 @@
+import { DEFAULT_CATEGORY, type Category } from '@/tramites/category';
 import type {
   BatchTranslationRequest,
   BatchTranslator,
@@ -87,8 +88,8 @@ export class RecordingPlanProposer implements PlanProposer {
     private readonly store: DemoRecordings,
   ) {}
 
-  async propose(facts: Fact[]): Promise<Plan> {
-    const plan = await this.inner.propose(facts);
+  async propose(facts: Fact[], category: Category = DEFAULT_CATEGORY): Promise<Plan> {
+    const plan = await this.inner.propose(facts, category);
     await this.store.savePlan(facts, plan);
     return plan;
   }

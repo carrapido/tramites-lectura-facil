@@ -1,6 +1,6 @@
-# Trámites en lectura fácil
+# Lectura fácil para cualquier papel
 
-A phone photo of a Mexican government notice becomes short fact cards in plain Spanish and Yucatec Maya, with voice. Hackathon project. Specs and progress live in [`odd/`](odd/objectives.md).
+An inclusion tool for quick, concise reading: a phone photo of any paper (an official notice, a meeting invitation, a prescription, a note) is classified by its context (`tramite`, `reunion`, `salud`, `nota`, `otro`) and becomes short fact cards in plain Spanish and Yucatec Maya, with voice. Hackathon project. Specs and progress live in [`odd/`](odd/objectives.md).
 
 ## Run it in 15 minutes (macOS or Linux)
 
@@ -22,12 +22,21 @@ A phone photo of a Mexican government notice becomes short fact cards in plain S
    ```
    The screen shows "conectado" when the phone reaches `GET /api/health` on the laptop. "Probar Google" calls `GET /api/smoke` (Gemini + Cloud Translation).
 
-## Read a notice
+## Read a paper
+
+Any paper works: an official notice, a meeting or event invitation, a prescription or medical appointment, a school or community note, or anything else.
 
 1. Run `npx expo start` and open the app in Expo Go.
 2. Tap "Tome una foto de su papel". The phone says why it needs the camera, then asks for permission.
-3. Photograph a fictitious notice (try `fixtures/aviso-ficticio.jpg`). The laptop sends it to Gemini through `POST /api/read`.
-4. Each card shows one short fact. "¿De dónde salió?" reveals the literal quote of the notice. Facts without a literal quote are never shown.
+3. Photograph a fictitious paper (try `fixtures/aviso-ficticio.jpg`). The laptop sends it to Gemini through `POST /api/read`.
+4. Each card shows one short fact. "¿De dónde salió?" reveals the literal quote of the paper. Facts without a literal quote are never shown.
+
+`POST /api/read` contract:
+
+- Request: `{ "imageBase64": string, "mimeType": "image/jpeg" | "image/png" }`, about 4 MB of image at most. Anything else returns 400 `invalid-request`.
+- Response: `{ "ok": true, "category": Category, "facts": Fact[], "replayed"?: true }`, with 1 to 7 traceable facts `{ kind, text, sourceQuote, box? }`. `replayed` appears only in demo replay.
+- `category` is one of `tramite`, `reunion`, `salud`, `nota`, `otro`, chosen by Gemini from the paper's context. Anything else, or no value, becomes `otro`. The list, Spanish names and notices live in `src/tramites/category.ts`.
+- An unreadable photo returns 422 `unreadable`.
 
 "Ver conexión" opens the diagnostics screen (`/diagnostico`).
 
@@ -57,18 +66,18 @@ Plain Spanish is spoken by the phone (`expo-speech`, `es-MX`, offline). Yucatec 
 
 ## Agentic checklist and reminder
 
-`POST /api/plan` turns the facts from `POST /api/read` into a proposal: what to bring and when to go. Nothing happens on the phone until the person taps "Sí".
+`POST /api/plan` turns the facts from `POST /api/read` into a proposal for any kind of paper: what to bring or do, and when to go. Nothing happens on the phone until the person taps "Sí".
 
-- Request: `{ "facts": Fact[] }`, 1 to 7 facts, the same shape as `POST /api/easy-read`. Anything else returns 400 `invalid-request`.
+- Request: `{ "facts": Fact[], "category"?: Category }`, 1 to 7 facts, the same shape as `POST /api/easy-read`. `category` is the one `POST /api/read` returned; without it the laptop uses `otro`. Anything else returns 400 `invalid-request`.
 - Response: `{ "ok": true, "plan": { "checklist": [{ text, sourceQuote }], "reminder": { dueDate, title, place?, sourceQuote } | null } }`.
-- Gemini (`gemini-3.8-flash`) answers only through two declared tools, `create_checklist` and `schedule_reminder` (function calling mode `ANY`).
+- Gemini (`gemini-3.8-flash`) answers only through two declared tools, `create_checklist` and `schedule_reminder` (function calling mode `ANY`). The instruction names the category; it proposes a reminder only when the paper has a date, and checklist items only when the paper asks to bring or do something.
 - Traceability: every item and the reminder keep a `sourceQuote` found literally in the facts' quotes; the rest is dropped. At most 6 items, 15 words or fewer each.
 - The reminder's `dueDate` must be a real date, today or later in Mexico's `America/Merida` time zone; otherwise `reminder` is `null` and the checklist stays.
 - Missing ADC returns 503 `adc-missing`, a bad environment 500 `config-missing`, other Gemini failures 502 `upstream-failed`.
-- The app calls `fetchPlan(facts)` in `src/screens/plan/plan-client.ts` and `useReminder()` in `src/screens/plan/use-reminder.ts`.
+- The app calls `fetchPlan(facts, category)` in `src/screens/plan/plan-client.ts` and `useReminder()` in `src/screens/plan/use-reminder.ts`.
 - The "Sí" rule: `useReminder().schedule(plan, 'yes')` is the only path to a notification. Any other answer schedules nothing (`executePlan` in `src/tramites/plan.ts`).
 - After "Sí", the phone says "Para avisarle antes de la fecha, necesitamos permiso.", then asks for notification permission. Denied shows "No podemos avisarle. Active las notificaciones en Ajustes."
-- Two local notifications (`expo-notifications`, they work in Expo Go): the day before at 10:00 and the due day at 08:00, phone time. Moments already past are skipped. Push notifications are not used.
+- Two local notifications titled "Recordatorio" (`expo-notifications`, they work in Expo Go): the day before at 10:00 and the due day at 08:00, phone time. Moments already past are skipped. Push notifications are not used.
 
 ## When the event Wi-Fi blocks phone-to-laptop traffic
 

@@ -47,7 +47,7 @@ describe('HomeScreen', () => {
     expect(screen.getByText('Español')).toBeTruthy();
     expect(screen.getByText("Maaya t'aan")).toBeTruthy();
     expect(screen.getByText('Traducción automática, sin revisar')).toBeTruthy();
-    expect(screen.getByText('Esto no es asesoría legal')).toBeTruthy();
+    expect(screen.getByText('Revise el papel original')).toBeTruthy();
   });
 
   it('gives the login command when the laptop has no Google credentials', async () => {

@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { apiUrl } from '@/screens/api-url';
 import { replayedFlag } from '@/screens/post-json';
+import { toCategory } from '@/tramites/category';
 
 /**
  * The server's Gemini call takes about 11 s and the Expo dev server closes its socket at 30 s.
@@ -15,9 +16,12 @@ const fact = z.object({
   sourceQuote: z.string(),
 });
 
+/** Lenient: a missing or unknown category becomes "otro" instead of failing the reading (context-categories S2). */
+const category = z.unknown().optional().transform(toCategory);
+
 const readBody = z.discriminatedUnion('ok', [
   // `replayed: true` means a demo recording answered: show REPLAY_LABEL (easyread-pitch S5).
-  z.object({ ok: z.literal(true), facts: z.array(fact), replayed: replayedFlag }),
+  z.object({ ok: z.literal(true), category, facts: z.array(fact), replayed: replayedFlag }),
   z.object({ ok: z.literal(false), reason: z.string() }),
 ]);
 

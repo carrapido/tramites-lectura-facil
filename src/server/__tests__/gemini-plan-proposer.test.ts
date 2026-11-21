@@ -109,3 +109,33 @@ describe('GeminiPlanProposer (S1)', () => {
     await expect(new GeminiPlanProposer(client).propose(FACTS)).rejects.toBeInstanceOf(CredentialsUnavailableError);
   });
 });
+
+describe('GeminiPlanProposer for any paper (context-categories S5)', () => {
+  async function instructionFor(category: Parameters<GeminiPlanProposer['propose']>[1]): Promise<string> {
+    const client = clientAnswering([CHECKLIST_CALL]);
+    await new GeminiPlanProposer(client).propose(FACTS, category);
+    return client.requests[0].config.systemInstruction;
+  }
+
+  it('names the category of the paper in the instruction', async () => {
+    expect(await instructionFor('reunion')).toContain('"reunion" (Reunión)');
+    expect(await instructionFor('salud')).toContain('"salud" (Salud)');
+  });
+
+  it('proposes a reminder only for a date and a checklist only for things to bring or do', async () => {
+    const instruction = await instructionFor('nota');
+
+    expect(instruction).toContain(`Solo si el papel tiene una fecha, llama también a schedule_reminder`);
+    expect(instruction).toContain('Si el papel no pide llevar ni hacer nada, llama a create_checklist con "items" vacío.');
+    expect(instruction).toContain('"vigente"');
+  });
+
+  it('does not frame the paper or its tools as a trámite', async () => {
+    const client = clientAnswering([CHECKLIST_CALL]);
+    await new GeminiPlanProposer(client).propose(FACTS, 'otro');
+
+    const { systemInstruction, tools } = client.requests[0].config;
+    expect(systemInstruction).not.toMatch(/trámite|aviso oficial/);
+    expect(JSON.stringify(tools)).not.toMatch(/trámite|aviso/);
+  });
+});

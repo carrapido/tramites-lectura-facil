@@ -44,7 +44,7 @@ function startTap() {
 beforeEach(() => {
   jest.clearAllMocks();
   pendingPlans.length = 0;
-  jest.mocked(readNoticePhoto).mockReset().mockResolvedValueOnce({ ok: true, facts: FIRST_FACTS }).mockResolvedValueOnce({ ok: true, facts: SECOND_FACTS });
+  jest.mocked(readNoticePhoto).mockReset().mockResolvedValueOnce({ ok: true, category: 'tramite', facts: FIRST_FACTS }).mockResolvedValueOnce({ ok: true, category: 'tramite', facts: SECOND_FACTS });
   jest.mocked(fetchPlan).mockImplementation(
     () =>
       new Promise<PlanResult>((resolve) => {

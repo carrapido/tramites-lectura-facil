@@ -4,6 +4,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { z } from 'zod';
+
 import { GeminiNoticeReader } from '@/server/gemini-notice-reader';
 import type { GenerateContentClient } from '@/server/gemini-writer';
 import { handleRead } from '@/server/read-handler';
@@ -47,7 +49,7 @@ describe('POST /api/read end to end with a fake Gemini (S1, S2, S5)', () => {
     const response = await handleRead(post({ imageBase64: PHOTO, mimeType: 'image/jpeg' }), () => new GeminiNoticeReader(gemini));
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ ok: true, facts: FACTS });
+    expect(await response.json()).toEqual({ ok: true, category: 'otro', facts: FACTS });
     expect(gemini.requests).toEqual([expect.objectContaining({ model: 'gemini-3.8-flash' })]);
     expect(JSON.stringify(gemini.requests[0])).toContain(PHOTO.slice(0, 64));
   });
@@ -131,5 +133,69 @@ describe('POST /api/read end to end with a fake Gemini (S1, S2, S5)', () => {
     expect(await response.json()).toEqual({ ok: false, reason: 'invalid-request' });
     expect(request.bodyUsed).toBe(false);
     expect(compose).not.toHaveBeenCalled();
+  });
+});
+
+const requestWithInstruction = z.object({ config: z.object({ systemInstruction: z.string() }) });
+
+function systemInstructionOf(request: unknown): string {
+  return requestWithInstruction.parse(request).config.systemInstruction;
+}
+
+async function readWith(answer: unknown): Promise<Response> {
+  return handleRead(post({ imageBase64: PHOTO, mimeType: 'image/jpeg' }), () => new GeminiNoticeReader(geminiAnswering(answer)));
+}
+
+describe('POST /api/read category (context-categories S2)', () => {
+  it('returns the category Gemini chose with the facts', async () => {
+    const response = await readWith({ readable: true, category: 'reunion', transcript: TRANSCRIPT, facts: FACTS });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true, category: 'reunion', facts: FACTS });
+  });
+
+  it.each([
+    ['an unknown category', 'banco'],
+    ['a number', 3],
+    ['null', null],
+  ])('turns %s into otro instead of failing', async (_name, category) => {
+    const response = await readWith({ readable: true, category, transcript: TRANSCRIPT, facts: FACTS });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true, category: 'otro', facts: FACTS });
+  });
+
+  it('accepts the category written with capitals and accents', async () => {
+    const response = await readWith({ readable: true, category: ' Trámite ', transcript: TRANSCRIPT, facts: FACTS });
+
+    expect(await response.json()).toEqual({ ok: true, category: 'tramite', facts: FACTS });
+  });
+});
+
+describe('GeminiNoticeReader instruction (context-categories S2, S3)', () => {
+  async function instruction(): Promise<string> {
+    const gemini = geminiAnswering({ readable: true, category: 'nota', transcript: TRANSCRIPT, facts: FACTS });
+    await new GeminiNoticeReader(gemini).read({ base64: PHOTO, mimeType: 'image/jpeg' });
+    return systemInstructionOf(gemini.requests[0]);
+  }
+
+  it('asks for one of the five categories, each explained', async () => {
+    const text = await instruction();
+
+    for (const category of ['tramite', 'reunion', 'salud', 'nota', 'otro']) expect(text).toContain(`"${category}"`);
+    expect(text).toContain('"category"');
+    expect(text).toMatch(/invitación/);
+    expect(text).toMatch(/receta/);
+    expect(text).toMatch(/cita médica/);
+    expect(text).toMatch(/escuela/);
+  });
+
+  it('reads any paper instead of framing everything as an official notice', async () => {
+    const text = await instruction();
+
+    expect(text).toContain('Lee la foto de un papel');
+    expect(text).not.toContain('Lee la foto de un aviso oficial');
+    expect(text).toContain('de 3 a 7 hechos');
+    expect(text).toContain('"sourceQuote" es un fragmento copiado exactamente de "transcript"');
   });
 });

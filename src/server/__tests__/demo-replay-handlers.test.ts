@@ -40,7 +40,7 @@ const LONG_FACT: Fact = {
   sourceQuote: 'se generarán recargos del 2% mensual',
 };
 
-const READING: NoticeReading = { readable: true, transcript: TRANSCRIPT, facts: [...FACTS, INVENTED] };
+const READING: NoticeReading = { readable: true, category: 'tramite', transcript: TRANSCRIPT, facts: [...FACTS, INVENTED] };
 
 const PLAN: Plan = {
   checklist: [
@@ -92,7 +92,7 @@ describe('POST /api/read in replay (S5)', () => {
     const response = await handleRead(readRequest(), () => new ReplayNoticeReader(store), true);
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ ok: true, facts: FACTS, replayed: true });
+    expect(await response.json()).toEqual({ ok: true, category: 'tramite', facts: FACTS, replayed: true });
   });
 
   it('returns 404 not-recorded without a recording', async () => {
@@ -104,7 +104,7 @@ describe('POST /api/read in replay (S5)', () => {
     const replayed = await handleRead(readRequest(), () => new ReplayNoticeReader(store), true);
 
     const liveBody = await live.json();
-    expect(liveBody).toEqual({ ok: true, facts: FACTS });
+    expect(liveBody).toEqual({ ok: true, category: 'tramite', facts: FACTS });
     expect(await replayed.json()).toEqual({ ...liveBody, replayed: true });
   });
 });

@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 import type { Fact, NoticeReading, Plan } from '@/tramites/ports';
 
-import { factSchema } from './fact-schema';
+import { factSchema, lenientCategorySchema } from './fact-schema';
 import { sha256 } from './hash';
 
 export interface RecordedTranslation {
@@ -13,7 +13,13 @@ export interface RecordedTranslation {
   translation: string;
 }
 
-const noticeReadingSchema = z.object({ readable: z.boolean(), transcript: z.string(), facts: z.array(factSchema) });
+/** Recordings made before categories existed have none; they replay as "otro" (context-categories S2). */
+const noticeReadingSchema = z.object({
+  readable: z.boolean(),
+  category: lenientCategorySchema,
+  transcript: z.string(),
+  facts: z.array(factSchema),
+});
 
 const translationsSchema = z.record(z.string(), z.object({ text: z.string(), translation: z.string().min(1) }));
 

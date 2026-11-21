@@ -20,7 +20,7 @@ const readRequest = z.object({
   mimeType: z.enum(['image/jpeg', 'image/png']),
 });
 
-/** POST /api/read: photo in, traceable facts out (S1-S4). `replayed` marks a demo replay answer. */
+/** POST /api/read: photo in, the paper's category and traceable facts out (S1-S4). `replayed` marks a demo replay answer. */
 export async function handleRead(request: Request, compose: () => NoticeReader, replayed = false): Promise<Response> {
   if (declaresOversizedBody(request, MAX_REQUEST_BYTES)) return invalidRequestResponse();
   const body = readRequest.safeParse(await jsonOrNull(request));
@@ -30,8 +30,8 @@ export async function handleRead(request: Request, compose: () => NoticeReader, 
   if (!reader) return configMissingResponse();
 
   try {
-    const facts = await readNotice(reader, { base64: body.data.imageBase64, mimeType: body.data.mimeType });
-    return Response.json({ ok: true, facts, ...replayedField(replayed) });
+    const { category, facts } = await readNotice(reader, { base64: body.data.imageBase64, mimeType: body.data.mimeType });
+    return Response.json({ ok: true, category, facts, ...replayedField(replayed) });
   } catch (error) {
     if (error instanceof UnreadableNoticeError) return Response.json({ ok: false, reason: 'unreadable' }, { status: 422 });
     return googleFailureResponse(error, 'read');

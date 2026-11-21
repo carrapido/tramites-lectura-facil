@@ -36,7 +36,7 @@ async function takePhoto() {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.mocked(readNoticePhoto).mockResolvedValue({ ok: true, facts: FACTS });
+  jest.mocked(readNoticePhoto).mockResolvedValue({ ok: true, category: 'tramite', facts: FACTS });
   jest.mocked(fetchEasyRead).mockResolvedValue({ ok: true, cards: CARDS });
 });
 

@@ -161,8 +161,8 @@ describe('reminderTexts (S6)', () => {
     const texts = reminderTexts(REMINDER, [{ text: 'Lleve este aviso y su identificación.', sourceQuote: 'con este aviso' }]);
 
     expect(texts).toEqual({
-      dayBefore: 'Mañana vence: pago del predial. Lugar: Tesorería Municipal. Lleve este aviso y su identificación.',
-      dueDay: 'Hoy vence: pago del predial. Lugar: Tesorería Municipal. Lleve este aviso y su identificación.',
+      dayBefore: 'Mañana: pago del predial. Lugar: Tesorería Municipal. Lleve este aviso y su identificación.',
+      dueDay: 'Hoy: pago del predial. Lugar: Tesorería Municipal. Lleve este aviso y su identificación.',
     });
   });
 
@@ -170,8 +170,8 @@ describe('reminderTexts (S6)', () => {
     const { place: _place, ...withoutPlace } = REMINDER;
 
     expect(reminderTexts(withoutPlace, [])).toEqual({
-      dayBefore: 'Mañana vence: pago del predial.',
-      dueDay: 'Hoy vence: pago del predial.',
+      dayBefore: 'Mañana: pago del predial.',
+      dueDay: 'Hoy: pago del predial.',
     });
   });
 
@@ -184,7 +184,42 @@ describe('reminderTexts (S6)', () => {
   it('never includes a CURP or an INE voter key', () => {
     const texts = reminderTexts({ ...REMINDER, title: 'pago de GOMC800101HYNRRR09 clave GOMRCR80010131H100' }, []);
 
-    expect(texts.dayBefore).toBe('Mañana vence: pago de clave. Lugar: Tesorería Municipal.');
+    expect(texts.dayBefore).toBe('Mañana: pago de clave. Lugar: Tesorería Municipal.');
     expect(texts.dueDay).not.toMatch(/GOM/);
+  });
+});
+
+describe('proposePlan: category (context-categories S5)', () => {
+  function categoryRecorder(): PlanProposer & { categories: unknown[] } {
+    const categories: unknown[] = [];
+    return {
+      categories,
+      propose: async (_facts, category) => {
+        categories.push(category);
+        return { checklist: [], reminder: null };
+      },
+    };
+  }
+
+  it('passes the category of the paper to the proposer', async () => {
+    const proposer = categoryRecorder();
+
+    await proposePlan(FACTS, { proposer, today: TODAY }, 'reunion');
+
+    expect(proposer.categories).toEqual(['reunion']);
+  });
+
+  it('uses otro when no category is given', async () => {
+    const proposer = categoryRecorder();
+
+    await proposePlan(FACTS, { proposer, today: TODAY });
+
+    expect(proposer.categories).toEqual(['otro']);
+  });
+
+  it('never says trámite in the reminder bodies', () => {
+    const texts = reminderTexts({ ...REMINDER, title: 'junta de padres' }, []);
+
+    expect(`${texts.dayBefore} ${texts.dueDay}`).not.toMatch(/trámite/i);
   });
 });
