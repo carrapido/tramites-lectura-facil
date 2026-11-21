@@ -18,7 +18,8 @@ export const theme = {
   type: { label: 20, body: 22, title: 28 },
   weight: { body: '400', label: '600' },
   radius: { card: 16, button: 32 },
-  size: { minTarget: 48, primaryTarget: 64, icon: 28 },
+  border: { hairline: 1, strong: 2 },
+  size: { minTarget: 48, primaryTarget: 64, icon: 28, pictogram: 48 },
   bodyTextPairs: [
     { name: 'ink on paper', foreground: color.ink, background: color.paper },
     { name: 'muted ink on paper', foreground: color.inkMuted, background: color.paper },

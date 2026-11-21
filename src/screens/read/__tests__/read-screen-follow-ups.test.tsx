@@ -4,7 +4,7 @@ import * as Speech from 'expo-speech';
 
 import { ReadScreen } from '@/screens/read/read-screen';
 
-jest.mock('expo-speech', () => ({ speak: jest.fn() }));
+jest.mock('expo-speech', () => ({ speak: jest.fn(), stop: jest.fn(async () => undefined) }));
 
 jest.mock('expo-image-picker', () => ({
   requestCameraPermissionsAsync: jest.fn(),

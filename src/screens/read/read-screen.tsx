@@ -1,22 +1,36 @@
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import * as Speech from 'expo-speech';
 import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ActionButton } from '@/components/action-button';
+import { FactCard } from '@/components/fact-card';
 import { SecondaryButton } from '@/components/secondary-button';
+import type { VoiceControls } from '@/components/voice-controls';
+import { fetchEasyRead } from '@/screens/easy-read-client';
+import { useLanguage } from '@/screens/language/language-store';
+import { fetchPlan } from '@/screens/plan/plan-client';
+import { useScreenVoice } from '@/screens/voice/use-screen-voice';
+import type { EasyReadCard } from '@/tramites/easy-read';
+import type { Plan } from '@/tramites/plan';
 import { theme } from '@/theme';
 
+import { PlanSheet } from './confirmation-sheet';
 import { readNoticePhoto, type NoticePhoto, type ReadFact } from './api-client';
 
 type ReadState =
   | { step: 'idle' }
   | { step: 'reading' }
-  | { step: 'facts'; facts: ReadFact[] }
+  | { step: 'cards'; facts: ReadFact[]; cards: EasyReadCard[] }
   | { step: 'failed'; message: string };
+
+/** The agent's proposal loads after the cards and never hides them (S10). */
+type PlanState = { step: 'none' } | { step: 'loading' } | { step: 'ready'; plan: Plan } | { step: 'failed' };
+
+const PLAN_FAILED = 'No pudimos preparar la lista. Sus tarjetas siguen aquí.';
 
 const CAMERA_REASON = 'Necesitamos la cámara para leer su papel.';
 const PERMISSION_DENIED = 'Sin permiso para la cámara. Actívelo en Ajustes del teléfono.';
@@ -42,7 +56,9 @@ const PHOTO_QUALITY = 0.5;
 const MAX_PHOTO_WIDTH = 1600;
 
 export function ReadScreen() {
-  const { state, busy, takePhoto } = useNoticeReading();
+  const voice = useScreenVoice();
+  const { state, plan, photoCount, busy, takePhoto } = useNoticeReading(voice.stop);
+  const showMaya = useLanguage() === 'yua';
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -53,10 +69,16 @@ export function ReadScreen() {
           onPress={takePhoto}
           disabled={busy}
         />
-        <ReadResult state={state} />
+        <ReadResult state={state} showMaya={showMaya} voice={voice} />
+        <PlanResult key={photoCount} plan={plan} voice={voice} />
         <Text style={styles.notice} accessibilityLanguage="es-MX">
           Esto no es asesoría legal
         </Text>
+        <SecondaryButton
+          label="Cambiar idioma"
+          icon={{ ios: 'globe', android: 'language' }}
+          onPress={() => openLanguagePicker(voice)}
+        />
         <Link href="./diagnostico" asChild>
           <SecondaryButton label="Ver conexión" icon={{ ios: 'wifi', android: 'wifi' }} />
         </Link>
@@ -65,12 +87,16 @@ export function ReadScreen() {
   );
 }
 
-function useNoticeReading() {
+/** `silenceVoices` runs first, so a card's voice never plays over the camera reason. */
+function useNoticeReading(silenceVoices: () => void) {
   const [state, setState] = useState<ReadState>({ step: 'idle' });
+  const [plan, setPlan] = useState<PlanState>({ step: 'none' });
+  const [photoCount, setPhotoCount] = useState(0);
   const { busy, runExclusive } = useExclusiveTask();
 
   function takePhoto() {
     void runExclusive(async () => {
+      silenceVoices();
       try {
         await readNoticeFromCamera();
       } catch {
@@ -95,11 +121,21 @@ function useNoticeReading() {
       return;
     }
     setState({ step: 'reading' });
+    setPlan({ step: 'none' });
+    setPhotoCount((count) => count + 1);
     const body = await readNoticePhoto(photo);
-    setState(body.ok ? { step: 'facts', facts: body.facts } : { step: 'failed', message: failureText(body.reason) });
+    if (!body.ok) {
+      setState({ step: 'failed', message: failureText(body.reason) });
+      return;
+    }
+    const proposal = fetchPlan(body.facts);
+    setState({ step: 'cards', facts: body.facts, cards: await easyReadCards(body.facts) });
+    setPlan({ step: 'loading' });
+    const planned = await proposal;
+    setPlan(planned.ok ? { step: 'ready', plan: planned.plan } : { step: 'failed' });
   }
 
-  return { state, busy, takePhoto };
+  return { state, plan, photoCount, busy, takePhoto };
 }
 
 /**
@@ -164,12 +200,34 @@ async function resizedJpegBase64(uri: string): Promise<string | undefined> {
   return saved.base64;
 }
 
+/** The read screen stays mounted under /idioma, so its voice must stop first (PR #7 review, W1). */
+function openLanguagePicker(voice: VoiceControls) {
+  voice.stop();
+  router.push('/idioma');
+}
+
+/** The easy-read cards, or the objective 3 facts in Spanish when they fail (S7). */
+async function easyReadCards(facts: ReadFact[]): Promise<EasyReadCard[]> {
+  const easyRead = await fetchEasyRead(facts);
+  return easyRead.ok ? easyRead.cards : facts.map(spanishOnlyCard);
+}
+
+function spanishOnlyCard(fact: ReadFact): EasyReadCard {
+  return { kind: fact.kind, plainSpanish: fact.text, maya: null, mayaStatus: 'unavailable', sourceQuote: fact.sourceQuote };
+}
+
 function failureText(reason: string): string {
   return FAILURE_TEXT[reason] ?? UPSTREAM_FAILED;
 }
 
-function ReadResult({ state }: { state: ReadState }) {
-  if (state.step === 'reading') return <Text style={styles.status}>Leyendo su papel.</Text>;
+interface ReadResultProps {
+  state: ReadState;
+  showMaya: boolean;
+  voice: VoiceControls;
+}
+
+function ReadResult({ state, showMaya, voice }: ReadResultProps) {
+  if (state.step === 'reading') return <StatusText>Leyendo su papel.</StatusText>;
   if (state.step === 'failed') {
     return (
       <Text style={styles.error} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
@@ -177,11 +235,17 @@ function ReadResult({ state }: { state: ReadState }) {
       </Text>
     );
   }
-  if (state.step === 'facts') {
+  if (state.step === 'cards') {
     return (
       <View style={styles.facts}>
-        {state.facts.map((fact) => (
-          <FactCard key={`${fact.kind}:${fact.sourceQuote}`} fact={fact} />
+        {state.cards.map((card, index) => (
+          <FactCard
+            key={`${card.kind}:${card.sourceQuote}`}
+            card={card}
+            voiceKey={`card${index}`}
+            showMaya={showMaya}
+            voice={voice}
+          />
         ))}
       </View>
     );
@@ -189,25 +253,24 @@ function ReadResult({ state }: { state: ReadState }) {
   return null;
 }
 
-function FactCard({ fact }: { fact: ReadFact }) {
-  const [sourceVisible, setSourceVisible] = useState(false);
-  return (
-    <View style={styles.card}>
-      <Text style={styles.body} accessibilityLanguage="es-MX">
-        {fact.text}
+function PlanResult({ plan, voice }: { plan: PlanState; voice: VoiceControls }) {
+  if (plan.step === 'loading') return <StatusText>Preparando su lista.</StatusText>;
+  if (plan.step === 'failed') {
+    return (
+      <Text style={styles.error} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
+        {PLAN_FAILED}
       </Text>
-      {sourceVisible ? (
-        <Text style={styles.quote} accessibilityLanguage="es-MX">
-          {fact.sourceQuote}
-        </Text>
-      ) : (
-        <SecondaryButton
-          label="¿De dónde salió?"
-          icon={{ ios: 'text.quote', android: 'format_quote' }}
-          onPress={() => setSourceVisible(true)}
-        />
-      )}
-    </View>
+    );
+  }
+  if (plan.step === 'ready') return <PlanSheet plan={plan.plan} voice={voice} />;
+  return null;
+}
+
+function StatusText({ children }: { children: string }) {
+  return (
+    <Text style={styles.status} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
+      {children}
+    </Text>
   );
 }
 
@@ -216,15 +279,6 @@ const styles = StyleSheet.create({
   content: { padding: theme.space.lg, gap: theme.space.lg },
   status: { fontSize: theme.type.body, color: theme.color.ink },
   facts: { gap: theme.space.md },
-  card: {
-    gap: theme.space.md,
-    padding: theme.space.lg,
-    borderRadius: theme.radius.card,
-    borderWidth: 1,
-    borderColor: theme.color.rule,
-  },
-  body: { fontSize: theme.type.body, color: theme.color.ink },
-  quote: { fontSize: theme.type.body, fontStyle: 'italic', color: theme.color.inkMuted },
   error: { fontSize: theme.type.body, color: theme.color.danger },
   notice: { fontSize: theme.type.label, color: theme.color.inkMuted },
 });
