@@ -1,5 +1,5 @@
 import type { Category } from './category';
-import { UnreadableNoticeError } from './errors';
+import { NoTextFoundError, UnreadableNoticeError } from './errors';
 import type { Fact, NoticeImage, NoticeReader, NoticeReading } from './ports';
 import { collapseWhitespace, isQuotedIn } from './quote-match';
 
@@ -11,10 +11,12 @@ export interface PaperReading {
 
 /**
  * Reads a paper and keeps only the facts whose source quote appears literally in the transcript (S3).
- * The category comes with them (context-categories S2). Throws UnreadableNoticeError when nothing traceable remains (S4).
+ * The category comes with them (context-categories S2). Throws NoTextFoundError when the photo shows no text,
+ * and UnreadableNoticeError when nothing traceable remains (S4 amended from L7).
  */
 export async function readNotice(reader: NoticeReader, image: NoticeImage): Promise<PaperReading> {
   const reading = await reader.read(image);
+  if (reading.textFound === false) throw new NoTextFoundError(reading.seen);
   const facts = reading.readable ? traceableFacts(reading) : [];
   if (facts.length === 0) throw new UnreadableNoticeError();
   return { category: reading.category, facts };

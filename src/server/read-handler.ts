@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { UnreadableNoticeError } from '@/tramites/errors';
+import { NoTextFoundError, UnreadableNoticeError } from '@/tramites/errors';
 import type { NoticeReader } from '@/tramites/ports';
 import { readNotice } from '@/tramites/read-notice';
 
@@ -33,7 +33,16 @@ export async function handleRead(request: Request, compose: () => NoticeReader, 
     const { category, facts } = await readNotice(reader, { base64: body.data.imageBase64, mimeType: body.data.mimeType });
     return Response.json({ ok: true, category, facts, ...replayedField(replayed) });
   } catch (error) {
-    if (error instanceof UnreadableNoticeError) return Response.json({ ok: false, reason: 'unreadable' }, { status: 422 });
-    return googleFailureResponse(error, 'read');
+    return readFailureResponse(error);
   }
+}
+
+/** 422 no-text (with `seen` when known) or unreadable for the photo itself (S4 amended from L7); else a Google failure. */
+function readFailureResponse(error: unknown): Response {
+  if (error instanceof NoTextFoundError) {
+    const seen = error.seen ? { seen: error.seen } : {};
+    return Response.json({ ok: false, reason: 'no-text', ...seen }, { status: 422 });
+  }
+  if (error instanceof UnreadableNoticeError) return Response.json({ ok: false, reason: 'unreadable' }, { status: 422 });
+  return googleFailureResponse(error, 'read');
 }

@@ -49,6 +49,8 @@ const CAMERA_REASON = 'Necesitamos la cámara para leer su papel.';
 const PERMISSION_DENIED = 'Sin permiso para la cámara. Actívelo en Ajustes del teléfono.';
 const CAMERA_FAILED = 'No pudimos abrir la cámara. Intente otra vez.';
 const UNREADABLE = 'No se ve bien la foto. Tome otra con más luz.';
+const NO_TEXT_START = 'No puedo saber si es un texto.';
+const NO_TEXT_NEXT_STEP = 'Tome una foto de un papel con letras.';
 
 const FAILURE_TEXT: Record<string, string> = {
   unreadable: UNREADABLE,
@@ -144,7 +146,7 @@ function useNoticeReading(silenceVoices: () => void) {
     setPhotoCount(photoNumber);
     const body = await readNoticePhoto(photo);
     if (!body.ok) {
-      setState({ step: 'failed', message: failureText(body.reason) });
+      setState({ step: 'failed', message: failureText(body.reason, body.seen) });
       return;
     }
     const proposal = fetchPlan(body.facts, body.category);
@@ -252,8 +254,15 @@ function spanishOnlyCard(fact: ReadFact): EasyReadCard {
   return { kind: fact.kind, plainSpanish: fact.text, maya: null, mayaStatus: 'unavailable', sourceQuote: fact.sourceQuote };
 }
 
-function failureText(reason: string): string {
+function failureText(reason: string, seen?: string): string {
+  if (reason === 'no-text') return noTextMessage(seen);
   return FAILURE_TEXT[reason] ?? UPSTREAM_FAILED;
+}
+
+/** Says what the photo seems to show, when the laptop knows it (S4 amended from L7). */
+function noTextMessage(seen?: string): string {
+  const shown = seen ? ` Lo que me muestra parece ser: ${seen}.` : '';
+  return `${NO_TEXT_START}${shown} ${NO_TEXT_NEXT_STEP}`;
 }
 
 /** Any answer from the demo recordings marks the whole result (easyread-pitch S5). */

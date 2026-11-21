@@ -22,7 +22,8 @@ const category = z.unknown().optional().transform(toCategory);
 const readBody = z.discriminatedUnion('ok', [
   // `replayed: true` means a demo recording answered: show REPLAY_LABEL (easyread-pitch S5).
   z.object({ ok: z.literal(true), category, facts: z.array(fact), replayed: replayedFlag }),
-  z.object({ ok: z.literal(false), reason: z.string() }),
+  // `seen` comes with reason "no-text"; a malformed one is dropped, never a bad-response (S4 amended from L7).
+  z.object({ ok: z.literal(false), reason: z.string(), seen: z.string().min(1).optional().catch(undefined) }),
 ]);
 
 export type ReadBody = z.infer<typeof readBody>;
