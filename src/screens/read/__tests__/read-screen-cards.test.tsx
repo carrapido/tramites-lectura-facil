@@ -74,9 +74,9 @@ describe('ReadScreen easy-read cards (S7, S8, S9)', () => {
   });
 
   it('plays one voice at a time across cards: only the last pressed card shows "Parar"', async () => {
-    jest.mocked(Speech.speak).mockImplementation(() => undefined);
     await takePhoto();
     await screen.findByText(CARDS[0].plainSpanish);
+    jest.mocked(Speech.speak).mockImplementation(() => undefined);
     const [first, second] = screen.getAllByRole('button', { name: 'Escuchar' });
     await fireEvent.press(first);
     await fireEvent.press(second);

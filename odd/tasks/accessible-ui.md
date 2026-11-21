@@ -41,8 +41,8 @@ Accounts, login, form filling, web build.
 - [x] T4 (S5), inline: `FactCard` with icon, sentence, "Escuchar" and "¿De dónde salió?"; used by the read screen.
 - [ ] T5 (S6), inline (guard done; device check pending): guard against `allowFontScaling={false}`; 200% font scale checked on one Android and one iOS phone (device, pending).
 
-- [ ] T6 (S8, S9), inline: `PlayButton` takes `status`, `onPress` and `onStop`; `FactCard` takes `EasyReadCard`, the language and screen voice controls; the picker samples use `useCardVoice()`.
-- [ ] T7 (S7, S8), inline: the read screen calls `fetchEasyRead`, falls back to Spanish facts and follows the saved language.
+- [x] T6 (S8, S9), inline: `PlayButton` takes `status`, `onPress` and `onStop`; `FactCard` takes `EasyReadCard`, the language and screen voice controls; the picker samples use `useCardVoice()`.
+- [x] T7 (S7, S8), inline: the read screen calls `fetchEasyRead`, falls back to Spanish facts and follows the saved language.
 - [ ] T8 (S10), inline: `ConfirmationSheet` with `fetchPlan`, "Escuchar", the checklist, the date and place in large type, "Sí, recuérdeme" and "No, gracias".
 - [ ] T9 (step 4), inline: phone checklist in `odd/phone-checks.md`; results go into each objective's Log.
 
@@ -85,3 +85,11 @@ Route: every task inline; no Writer trigger (one dependent behavior chain, units
   - RED: 3 failing. GREEN: `npm ci && npm test` passes 234/234, and `tsc --noEmit` and `expo lint` are clean.
 - **L11 (user, 2026-11-21, verbatim excerpt):** "Crea una rama nueva desde main actualizado para la integración (por ejemplo `feat/integrate-reading-screen`) y, siguiendo ODD con tests primero, conecta la pantalla de lectura (`FactCard` y el botón "Escuchar") con todo lo que ya está hecho: Tarjetas en español y Maya (`fetchEasyRead`) y el guardado de idioma ("Maaya t'aan"). El botón "Escuchar" con las dos voces (`useCardVoice`). La hoja de confirmación del agente, que lea la propuesta en voz alta y muestre la lista y la fecha en grande con los botones "Sí, recuérdeme" y "No, gracias". Prepara y guía la lista de verificación para las pruebas manuales en el teléfono [...]. No toques los archivos del objetivo 8 (pitch / demo en vivo)."
 - **L12 (route):** `feat/integrate-reading-screen` is stacked on `feat/accessible-ui`, because `FactCard`, `PlayButton` and the language store exist only in PR #2 until it merges. Its PR targets `feat/accessible-ui` and is retargeted to `main` after #2. The `PlayButton` and `FactCard` tests change, because S9 and S8 change their props. That is a spec change requested in issue #4, not an edit to make a RED test pass.
+- **L13 (T6, T7):**
+  - RED: two commits, the first with 14 failures and the second with 5.
+  - GREEN: 252/252, and `tsc` and `expo lint` are clean.
+  - `useScreenVoice` (`src/screens/voice/use-screen-voice.ts`) wraps one `useCardVoice()` per screen, keyed per button. Only the last button pressed shows "Parar".
+  - The language store keeps a choice in memory only when the phone could not store it, and notifies `useLanguage()` subscribers.
+  - `jest.setup.ts` stubs `expo-audio`, which cannot load under Jest (`package.json` `jest.setupFiles`).
+  - The objective 3 read-screen tests got `stop` in their `expo-speech` mocks, because the screen voice stops speech on unmount. No assertion changed; objective 3 is already GREEN.
+  - Two of my own new tests had wrong doubles (a storage that never returns what it saved, and a speech mock set before the photo). Both doubles were fixed; no expectation was weakened.

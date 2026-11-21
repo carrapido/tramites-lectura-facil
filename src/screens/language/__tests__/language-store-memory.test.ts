@@ -3,10 +3,16 @@ import Storage from 'expo-sqlite/kv-store';
 
 import { loadLanguage, saveLanguage, useLanguage } from '@/screens/language/language-store';
 
-jest.mock('expo-sqlite/kv-store', () => ({
-  __esModule: true,
-  default: { getItemSync: jest.fn(() => null), setItemSync: jest.fn() },
-}));
+jest.mock('expo-sqlite/kv-store', () => {
+  const values = new Map<string, string>();
+  return {
+    __esModule: true,
+    default: {
+      getItemSync: jest.fn((key: string) => values.get(key) ?? null),
+      setItemSync: jest.fn((key: string, value: string) => values.set(key, value)),
+    },
+  };
+});
 
 describe('the read screen follows the saved language (S8)', () => {
   it('re-renders a subscriber when the language is saved', async () => {
@@ -22,5 +28,6 @@ describe('the read screen follows the saved language (S8)', () => {
     });
     expect(() => saveLanguage('es')).toThrow('disk');
     expect(loadLanguage()).toBe('es');
+    expect(Storage.getItemSync('language')).toBe('yua');
   });
 });

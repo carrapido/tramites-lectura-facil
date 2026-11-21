@@ -6,6 +6,7 @@ import { ReadScreen } from '@/screens/read/read-screen';
 
 jest.mock('expo-speech', () => ({
   speak: jest.fn((_text: string, options?: { onDone?: () => void }) => options?.onDone?.()),
+  stop: jest.fn(async () => undefined),
 }));
 
 jest.mock('expo-image-picker', () => ({
