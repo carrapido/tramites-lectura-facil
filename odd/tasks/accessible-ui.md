@@ -54,3 +54,13 @@ Route: every task inline; no Writer trigger (one dependent behavior chain, units
 - **L6 (pending device checks):** S3: how VoiceOver and TalkBack pronounce `yua` text. S6: 200% system font on one Android and one iOS phone with no clipping (read screen, fact cards, `/idioma`). S4: the choice survives an app restart in Expo Go. T5 stays open until then.
 - **Handoff:** objective 4 renders Maya with `MayaText` next to `SpanishText`. Objective 5 can replace `speakAloud` in `src/components/play-button.tsx`. To show the box in "¿De dónde salió?", objective 3's client must keep `box` and pass the photo URI.
 - **L7 (independent verifier, item 5):** no blockers. S1, S2, S4, S5 met; S3 met in code; S6 partial (device). Dependency check passed: `expo-sqlite` 58.0.18 for SDK 58, in Expo Go, and `getItemSync`/`setItemSync` are in `build/Storage.d.ts`. Follow-ups taken: each language option is tagged in its own language (`es-MX`, `yua`), and a failed save still goes back. New regression tests are in `language-screen-follow-ups.test.tsx` (RED 3 failing, then GREEN). 99/99 tests, tsc and lint clean. Left as notes: the saved language is not used yet (objective 4), and `Speech.stop()` is not awaited before `speak`.
+- **L8 (native review):** the user granted review of 5daa91a..ba21901 (lenses risk, readability, reliability; lineage `review-8874202ab27021af`). The result was approved and acknowledged (authority burned). PR: https://github.com/carrapido/tramites-lectura-facil/pull/2. Non-blocking findings, left as later work:
+  - R3-choose-back-without-stack: if `/idioma` is opened with no screen behind it, `router.back()` has nowhere to go. Use the `BackButton` fallback, which replaces with `/`.
+  - R3-failed-save-choice-lost: the comment says the choice lasts until the app closes, but nothing keeps it in memory. R2-misleading-save-failure-comment flags the same comment.
+  - R3-speech-stop-race: `Speech.stop()` is not awaited before `speak`.
+  - R2-speechTag-misnamed: `speechTag` is an accessibility language tag; rename it.
+  - R2-duplicated-fact-type: `CardFact` repeats `ReadFact`.
+  - R2-dead-test-conditional: `buttons.test.tsx:35` has a conditional that is never needed.
+  - R3-cambiar-idioma-press-untested: no test presses "Cambiar idioma" and checks the route.
+  - R3-saved-language-unused: the saved language is not used yet (objective 4).
+- **Next step:** the team reviews PR #2. Then run the device checks in L6 and close T5. Status stays in-progress until then.
