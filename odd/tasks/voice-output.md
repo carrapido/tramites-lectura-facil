@@ -7,7 +7,7 @@ owner: carrapido
 
 ## Goal
 
-Every easy-read card can be heard: plain Spanish with the phone's own voice, Yucatec Maya with Gemini TTS generated on the laptop, only after the person taps "Escuchar".
+Every easy-read card can be heard: plain Spanish with the phone's own voice, Yucatec Maya with Gemini TTS generated on the laptop, only after the person taps "Escuchar". (superseded by odd/tasks/field-feedback.md S3–S4)
 
 ## Scope
 
@@ -19,8 +19,8 @@ Human-recorded audio, Nahuatl or other languages, streaming audio, screens.
 
 ## Specs
 
-- **S1:** Spanish is spoken on the phone with `expo-speech` (`language: "es-MX"`), free and without network; Maya is never sent to the phone's voice.
-- **S2:** `GET /api/voice?text=<maya>` returns `audio/wav` synthesized by `gemini-3.8-flash-lite-tts` (location `global`, voice `Kore`, slow and clear style). The text is validated with Zod (1 to 300 characters); anything else returns 400 `{ ok: false, reason: "invalid-request" }`. Missing ADC returns 503 `adc-missing`, missing config 500 `config-missing`, other failures 502 `upstream-failed`.
+- **S1:** Spanish is spoken on the phone with `expo-speech` (`language: "es-MX"`), free and without network; Maya is never sent to the phone's voice. (superseded by odd/tasks/field-feedback.md S3–S4)
+- **S2:** `GET /api/voice?text=<text>&lang=yua|es` returns `audio/wav` synthesized by `gemini-3.8-flash-lite-tts` (location `global`, voice `Kore`, slow and clear style). The text is validated with Zod (1 to 300 characters); anything else returns 400 `{ ok: false, reason: "invalid-request" }`. Missing ADC returns 503 `adc-missing`, missing config 500 `config-missing`, other failures 502 `upstream-failed`.
 - **S3:** The same text is never paid for twice: audio is cached by the SHA-256 of the text, in memory and in the git-ignored `.cache/voice/` folder, so a dev-server restart reuses it.
 - **S4:** The response is always a playable WAV: if Gemini returns headerless 16-bit PCM (24 kHz mono), the server adds the WAV header; a test checks the RIFF header and the data size.
 - **S5:** Audio never plays by itself: the client module only plays when its `play` function is called from a tap, stops any other voice first, and respects one voice at a time. Maya audio is labeled "Voz automática, sin revisar" (exported constant for the UI).
@@ -36,4 +36,4 @@ Human-recorded audio, Nahuatl or other languages, streaming audio, screens.
 - **Contract for objective 6:** In a card, call `const voice = useCardVoice()` from `@/screens/voice/use-card-voice`. One big "Escuchar" button (icon + word, about 64 dp) per language: Spanish calls `voice.speakSpanish(card.plainSpanish)`; Maya calls `voice.playMaya(card.maya)` only when `card.maya` is not null. Show `MACHINE_VOICE_LABEL` ("Voz automática, sin revisar") next to the Maya button. Never call them on mount or from an effect: only from a tap. `voice.status` is `idle | loading | playing | error`; while `loading` or `playing` you may show a visible "Parar" button that calls `voice.stop()`. On `error` (`reason: "voice-unavailable"`) say what happened and the next step, for example "No se pudo oír en maya. Escuche en español."; the Spanish button keeps working. Starting one voice stops the other.
 - **L5 (S7 real smoke):** `GET /api/voice` with "K'a'abéet a bo'otik u tojol $1,250.00 pesos." → 200 `audio/wav`, 372,508 bytes, RIFF/WAVE header, 1 ch 24 kHz Int16, 7.6 s, in 7.7 s. Second call → identical bytes in 0.48 s from the cache (`.cache/voice/` holds 1 file). `prebuiltVoiceConfig.voiceName` and `speechMetadata.style` were accepted by `gemini-3.8-flash-lite-tts`. `npx expo install expo-audio` also added the `expo-audio` config plugin to `app.json` (kept; it only affects native builds). Pending: listen to the Maya audio and note whether it is understandable (`afplay /tmp/voice1.wav` on the laptop), and play it on a phone in Expo Go.
 - **L6 (S7 by ear, user):** "si se entiende el Maya" — the Gemini TTS Maya audio for "K'a'abéet a bo'otik u tojol $1,250.00 pesos." is understandable (heard on the laptop with `afplay`). S1–S7 pass. Still pending, outside this objective: playing both voices on a phone in Expo Go (issue #4).
-- **Next objective:** 7, Agentic checklist and reminder (`agentic-checklist.md`). Not started.
+- **Next:** phone checks only (odd/phone-checks.md).

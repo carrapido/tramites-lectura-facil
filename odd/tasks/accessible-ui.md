@@ -126,10 +126,7 @@ Route: every task inline; no Writer trigger (one dependent behavior chain, units
   - R3-store-test-order-dependence and R2-002: `language-store-memory.test.ts` depends on test order, because module state is shared.
   - R3-due-date-day-unvalidated: `formatDueDate` checks the month but not the day.
   - R2-003 and R2-004: readability suggestions in `confirmation-sheet.tsx`.
-- **Next step:**
-  1. Carrapido approves #2; merge it.
-  2. Retarget #7 to `main`; Carrapido reviews it.
-  3. Run `odd/phone-checks.md` on a phone and write the results in each Log. That closes T5.
+- **Next step:** run odd/phone-checks.md and close T5.
 - **L18 (user, 2026-11-21, verbatim):** "Sube el arreglo, Cambia a #7 a main y integra el 7# -> #6"
 - **L19 (PR #7 review W1):**
   - "Cambiar idioma" calls `voice.stop()` before `router.push('/idioma')`, because the read screen stays mounted under the picker.

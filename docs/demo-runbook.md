@@ -8,21 +8,15 @@ Script: `docs/pitch.md`. Spec: `odd/tasks/easyread-pitch.md`.
 - **Operator (O):** holds the phone, mirrors it to the projector, runs the laptop.
 - One laptop runs the server; only that laptop's credentials are used.
 
-## Readiness gate (decide at T-60)
-
-The full demo needs issue #4 step 3 (cards in both languages, "Escuchar" with both voices, confirmation sheet) merged into `main`.
-
-| State at T-60 | Demo to run |
-|---|---|
-| #4 step 3 merged and checked on the demo phone | Full script in `docs/pitch.md` |
-| Not merged | Objective 3 screen (photo → fact cards → "¿De dónde salió?"), then O plays one recorded Maya voice from the laptop (`afplay fixtures/demo/voice/<file>.wav`). P drops the agent part (3-minute cut). |
+Full script: everything in `docs/pitch.md` is merged.
 
 ## T-60 minutes
 
 1. `git pull && npm ci && npm test` on the demo laptop. Everything green.
 2. Credentials: `gcloud auth application-default print-access-token >/dev/null && echo ok`, and `.env.local` holds `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION` and `GOOGLE_CLOUD_QUOTA_PROJECT` (without the quota project, Translation answers `PERMISSION_DENIED`).
 3. Live check: `npm start` (or `npx expo start`), then `npm run demo:warmup`. Expect five `OK` lines.
-4. If the recordings in `fixtures/demo/` are missing or stale: stop the server, run `npm run demo:record`, then `npm run demo:warmup`, then play every card's Maya voice once in the app. Commit the new recordings only if they hold fictitious data.
+4. If the recordings in `fixtures/demo/` are missing or stale: stop the server, run `npm run demo:record`, then `npm run demo:warmup`, then play every card's Spanish and Maya voice once and the agent sheet's "Escuchar" in the app. Commit the new recordings only if they hold fictitious data.
+   Avoid tapping many voices in a burst: Gemini TTS returned 429 on about 10 rapid calls. Cached voices are free.
 5. Replay check: stop the server, run `npm run demo:replay`, then `npm run demo:warmup`. Expect five `OK … replayed` lines.
 6. Print `fixtures/aviso-ficticio.jpg` (category `tramite`) and `fixtures/invitacion-ficticia.jpg` (category `reunion`) on paper, about letter size, and test a photo of each under the stage light. Replay mode answers with the notice for any photo, so the invitation beat in the script is live-only.
 7. Screen mirroring: iPhone with QuickTime (cable, File → New Movie Recording → choose the phone); Android with `scrcpy` over USB. Test it on the projector.

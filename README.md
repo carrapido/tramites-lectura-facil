@@ -91,11 +91,11 @@ Both languages come from the laptop's Gemini voice. Spanish has a phone fallback
 
 A live pitch must survive bad Wi-Fi or a Google outage. The laptop server can record Google's answers for the fictitious notice once, then replay them.
 
-1. Record: `npm run demo:record` (`DEMO_RECORD=1 expo start`). Read `fixtures/aviso-ficticio.jpg`, open its cards, play each Maya voice and open the plan. Each Google answer is saved under `fixtures/demo/`: `notice-reading.json`, `translations.json`, `plain-spanish.json`, `plan.json` and `voice/<sha256>.wav`. Only fictitious data; the folder is committed.
+1. Record: `npm run demo:record` (`DEMO_RECORD=1 expo start`). Read `fixtures/aviso-ficticio.jpg`, open its cards, play each Spanish and Maya voice and open the plan. Each Google answer is saved under `fixtures/demo/`: `notice-reading.json`, `translations.json`, `plain-spanish.json`, `plan.json` and `voice/<sha256>.wav`. Only fictitious data; the folder is committed.
 2. Replay: `npm run demo:replay` (`DEMO_REPLAY=1 expo start`). `/api/read`, `/api/easy-read`, `/api/voice` and `/api/plan` answer from `fixtures/demo/` without Google clients or ADC. The domain rules still run: traceability, 15 words, the "Sí" confirmation.
 3. Warm-up: `npm run demo:warmup` (or `npm run demo:warmup -- http://<laptop-ip>:8081`, or `DEMO_BASE_URL`). It checks `/api/health`, calls the four routes once with the fixture and prints `OK|FAIL <route> <status> <ms>ms [replayed]`. It exits 1 if any route fails.
 
-- Label rule: replayed JSON answers carry `"replayed": true` and the replayed voice the header `X-Demo-Replay: 1`. The app shows "Respuesta grabada" (`REPLAY_LABEL` in `src/screens/demo-label.ts`) next to them.
+- Label rule: replayed JSON answers carry `"replayed": true` and the replayed voice the header `X-Demo-Replay: 1`. The app shows "Respuesta grabada" (`REPLAY_LABEL` in `src/screens/demo-label.ts`) next to replayed JSON answers; the replayed-voice header is not shown in the UI.
 - A request the recordings do not cover returns 404 `{ "ok": false, "reason": "not-recorded" }`. The server never invents an answer.
 - With both variables on, replay wins and the server logs a warning. Neither variable starts with `EXPO_PUBLIC_`, so they never reach the app.
 - Replay serves the one recorded notice reading for any photo. In replay a Maya translation that was never recorded shows as unavailable, like a Translation failure.

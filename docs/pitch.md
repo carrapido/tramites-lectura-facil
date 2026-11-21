@@ -44,7 +44,7 @@ Roles: **P** = presenter (talks), **O** = operator (holds the phone, mirrored on
 
 **O:** Toca "Escuchar" en la tarjeta del monto, en maya.
 
-**P:** La voz en maya es automática. Por eso la etiquetamos: "Traducción automática, sin revisar".
+**P:** La voz en maya es automática. Por eso la etiquetamos: "Voz automática, sin revisar".
 
 **[CORTE 3 MIN]**
 
@@ -68,7 +68,7 @@ Roles: **P** = presenter (talks), **O** = operator (holds the phone, mirrored on
 
 **P:** Gemini lee el papel, decide de qué tipo es y extrae los datos, cada uno con su cita literal. Una regla del código descarta lo que no tenga cita.
 
-**P:** Cloud Translation lo pasa a maya, y Gemini le pone voz. El español usa la voz del propio teléfono, sin internet.
+**P:** Cloud Translation lo pasa a maya, y Gemini le pone voz. El español también lo lee una voz automática en la laptop. Si falla, habla una voz en español del teléfono.
 
 **P:** El asistente usa herramientas, pero el código solo las ejecuta con un "Sí".
 
