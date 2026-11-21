@@ -1,4 +1,5 @@
 import { act, renderHook } from '@testing-library/react-native';
+import { PermissionStatus } from 'expo';
 import * as Notifications from 'expo-notifications';
 import * as Speech from 'expo-speech';
 
@@ -13,6 +14,8 @@ jest.mock('expo-notifications', () => ({
   requestPermissionsAsync: jest.fn(),
   scheduleNotificationAsync: jest.fn(async () => 'notification-id'),
   cancelAllScheduledNotificationsAsync: jest.fn(async () => undefined),
+  cancelScheduledNotificationAsync: jest.fn(async () => undefined),
+  getAllScheduledNotificationsAsync: jest.fn(async () => []),
   setNotificationChannelAsync: jest.fn(async () => null),
   SchedulableTriggerInputTypes: { DATE: 'date' },
   AndroidImportance: { HIGH: 6 },
@@ -103,6 +106,35 @@ describe('useReminder (S4, S5, S7)', () => {
     await act(() => result.current.cancelAll());
 
     expect(Notifications.cancelAllScheduledNotificationsAsync).toHaveBeenCalledTimes(1);
+    expect(result.current.status).toBe('idle');
+  });
+
+  it('cancelAll leaves no reminder scheduled after a "yes" with the default scheduler (L5)', async () => {
+    const pending = new Set<string>();
+    jest.mocked(Speech.speak).mockImplementation((_text, options) => options?.onDone?.());
+    jest.mocked(Notifications.requestPermissionsAsync).mockResolvedValue({
+      granted: true,
+      status: PermissionStatus.GRANTED,
+      expires: 'never',
+      canAskAgain: false,
+    });
+    jest.mocked(Notifications.scheduleNotificationAsync).mockImplementation(async (request) => {
+      const id = request.identifier ?? `generated-${pending.size + 1}`;
+      pending.add(id);
+      return id;
+    });
+    jest.mocked(Notifications.cancelScheduledNotificationAsync).mockImplementation(async (id) => {
+      pending.delete(id);
+    });
+    jest.mocked(Notifications.cancelAllScheduledNotificationsAsync).mockImplementation(async () => pending.clear());
+    const { result } = await renderHook(() => useReminder());
+
+    await act(() => result.current.schedule(PLAN, 'yes'));
+    const scheduledBeforeCancel = pending.size;
+    await act(() => result.current.cancelAll());
+
+    expect(scheduledBeforeCancel).toBeGreaterThan(0);
+    expect(pending.size).toBe(0);
     expect(result.current.status).toBe('idle');
   });
 

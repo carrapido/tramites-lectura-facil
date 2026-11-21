@@ -53,6 +53,17 @@ describe('GeminiPlanProposer (S1)', () => {
     expect(JSON.stringify(request.contents)).toContain('vence el día 30 de noviembre de 2026');
   });
 
+  it('tells Gemini to restate only what each source quote says, with "vigente" as the counter-example (L4)', async () => {
+    const client = clientAnswering([CHECKLIST_CALL, REMINDER_CALL]);
+
+    await new GeminiPlanProposer(client).propose(FACTS);
+
+    const { systemInstruction } = client.requests[0].config;
+    expect(systemInstruction).toContain('solo dice lo que dice su "sourceQuote"');
+    expect(systemInstruction).toContain('No agregues requisitos, adjetivos, documentos, montos ni fechas');
+    expect(systemInstruction).toContain('"vigente"');
+  });
+
   it('turns both function calls into a plan', async () => {
     const plan = await new GeminiPlanProposer(clientAnswering([CHECKLIST_CALL, REMINDER_CALL])).propose(FACTS);
 

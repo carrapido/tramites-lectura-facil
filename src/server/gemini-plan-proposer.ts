@@ -35,6 +35,10 @@ const INSTRUCTION = [
   `Si hay una fecha límite, llama también a ${SCHEDULE_REMINDER} con la fecha en formato AAAA-MM-DD,`,
   'un título corto como "pago del predial" y el lugar si el aviso lo dice.',
   'Cada "sourceQuote" se copia exactamente de la "sourceQuote" de un hecho.',
+  'Cada "text" y el recordatorio solo dice lo que dice su "sourceQuote".',
+  'No agregues requisitos, adjetivos, documentos, montos ni fechas que la cita no diga.',
+  'Por ejemplo, si la cita dice "identificación oficial", no escribas "identificación oficial vigente";',
+  'no agregues palabras como "vigente", "original" o "copia" si la cita no las tiene.',
   'No incluyas CURP, números de INE ni otros datos personales.',
 ].join(' ');
 
