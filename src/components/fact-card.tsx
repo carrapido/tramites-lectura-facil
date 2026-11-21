@@ -8,7 +8,7 @@ import { theme } from '@/theme';
 import { MayaText, SpanishText } from './language-text';
 import { PlayButton } from './play-button';
 import { SourceQuote } from './source-quote';
-import type { VoiceControls } from './voice-controls';
+import { MAYA_VOICE_FAILED, type VoiceControls } from './voice-controls';
 
 interface FactCardProps {
   card: EasyReadCard;
@@ -23,8 +23,6 @@ interface Icon {
   ios: SFSymbol;
   android: AndroidSymbol;
 }
-
-const MAYA_VOICE_FAILED = 'No se pudo oír en maya. Escuche en español.';
 
 /** Kinds come from Gemini as free words ("fecha", "Montos"), so they match by prefix. */
 const ICON_BY_KIND_PREFIX: [string, Icon][] = [

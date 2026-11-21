@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/back-button';
 import { PlayButton } from '@/components/play-button';
-import type { VoiceControls } from '@/components/voice-controls';
+import { MAYA_VOICE_FAILED, type VoiceControls } from '@/components/voice-controls';
 import { useScreenVoice } from '@/screens/voice/use-screen-voice';
 import { MACHINE_VOICE_LABEL } from '@/tramites/voice';
 import { theme } from '@/theme';
@@ -69,6 +69,11 @@ function LanguageSample({ id, name, voice }: { id: Language; name: string; voice
           {MACHINE_VOICE_LABEL}
         </Text>
       ) : null}
+      {voice.failed(id) ? (
+        <Text style={styles.error} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
+          {MAYA_VOICE_FAILED}
+        </Text>
+      ) : null}
     </>
   );
 }
@@ -123,4 +128,5 @@ const styles = StyleSheet.create({
   optionLabel: { fontSize: theme.type.title, fontWeight: theme.weight.label, color: theme.color.signal },
   optionLabelSelected: { color: theme.color.onSignal },
   note: { fontSize: theme.type.label, color: theme.color.inkMuted },
+  error: { fontSize: theme.type.body, color: theme.color.danger },
 });

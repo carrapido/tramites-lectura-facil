@@ -56,9 +56,9 @@ const PHOTO_QUALITY = 0.5;
 const MAX_PHOTO_WIDTH = 1600;
 
 export function ReadScreen() {
-  const { state, plan, photoCount, busy, takePhoto } = useNoticeReading();
-  const showMaya = useLanguage() === 'yua';
   const voice = useScreenVoice();
+  const { state, plan, photoCount, busy, takePhoto } = useNoticeReading(voice.stop);
+  const showMaya = useLanguage() === 'yua';
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -87,7 +87,8 @@ export function ReadScreen() {
   );
 }
 
-function useNoticeReading() {
+/** `silenceVoices` runs first, so a card's voice never plays over the camera reason. */
+function useNoticeReading(silenceVoices: () => void) {
   const [state, setState] = useState<ReadState>({ step: 'idle' });
   const [plan, setPlan] = useState<PlanState>({ step: 'none' });
   const [photoCount, setPhotoCount] = useState(0);
@@ -95,6 +96,7 @@ function useNoticeReading() {
 
   function takePhoto() {
     void runExclusive(async () => {
+      silenceVoices();
       try {
         await readNoticeFromCamera();
       } catch {

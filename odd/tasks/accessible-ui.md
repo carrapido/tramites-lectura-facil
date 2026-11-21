@@ -104,3 +104,18 @@ Route: every task inline; no Writer trigger (one dependent behavior chain, units
   - `fetchPlan(facts)` starts with `fetchEasyRead`, and the sheet appears after the cards. A failure says "No pudimos preparar la lista. Sus tarjetas siguen aquí."
   - `SourceQuote` moved to `src/components/source-quote.tsx`.
 - **L15 (T9):** `odd/phone-checks.md` lists the manual checks (connection, camera, both voices, language restart, notifications, TalkBack/VoiceOver, 200% font), each with the Log to write in. Results are pending on a phone. T5 stays open until S3 and S6 are seen on a device. Objective 8 files were not touched.
+- **L16 (independent verifier, item 5):**
+  - S7, S8 and S10 met. S9 was partial because of B1: a new photo spoke the camera reason over a playing Maya clip, and the old "Parar" moved onto the new card0.
+  - Item 5 is clear: `use-card-voice.test.ts` still mocks `expo-audio` itself, so the setup stub masks nothing.
+  - The objective 3 tests changed only their `stop` mock.
+  - Correction batch:
+    - B1: `takePhoto` calls `voice.stop()` first.
+    - W1: "No, gracias" is disabled while `asking`.
+    - W5: the `/idioma` Maya sample says "No se pudo oír en maya. Escuche en español." when it fails.
+    - W6: `formatDueDate` shows a malformed date as written.
+  - RED: 4 failing (`read-screen-voice-stop.test.tsx`, which is the verifier's probe, plus the sheet and picker follow-ups). GREEN: 271/271, and `tsc` and `expo lint` are clean.
+  - Left open:
+    - W2: duplicate reminders, because the scheduler never cancels (objective 7 L5).
+    - W3: two 64 dp primary buttons on the read screen (camera and "Sí, recuérdeme"), which goes against "One primary action per screen". A team decision.
+    - W4: "Escuchar" is 48 dp, not the ~64 dp in the objective 5 contract.
+    - The camera button stays disabled until the plan arrives (up to 50 s).

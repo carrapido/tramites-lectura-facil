@@ -60,10 +60,12 @@ export function ConfirmationSheet({ plan, voice, reminder }: ConfirmationSheetPr
   );
 }
 
-/** Spanish long date from `YYYY-MM-DD`, read as written, without time zones. */
+/** Spanish long date from `YYYY-MM-DD`, without time zones; anything else is shown as written. */
 export function formatDueDate(isoDate: string): string {
-  const [year, month, day] = isoDate.split('-').map(Number);
-  return `${day} de ${MONTHS[month - 1]} de ${year}`;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
+  const [year, month, day] = match ? match.slice(1).map(Number) : [];
+  const monthName = month === undefined ? undefined : MONTHS[month - 1];
+  return monthName ? `${day} de ${monthName} de ${year}` : isoDate;
 }
 
 function proposalSentence(reminder: Reminder | null): string {
@@ -109,7 +111,9 @@ function ReminderAnswer({ plan, reminder, controls }: ReminderAnswerProps) {
   );
 }
 
+/** Both answers wait while the phone asks for permission, so a second tap cannot change the outcome. */
 function AnswerButtons({ plan, controls }: { plan: Plan; controls: ReminderControls }) {
+  const asking = controls.status === 'asking';
   return (
     <>
       {controls.message ? (
@@ -120,12 +124,14 @@ function AnswerButtons({ plan, controls }: { plan: Plan; controls: ReminderContr
       <ActionButton
         label="Sí, recuérdeme"
         icon={{ ios: 'bell.fill', android: 'notifications' }}
-        disabled={controls.status === 'asking'}
+        disabled={asking}
         onPress={() => void controls.schedule(plan, 'yes')}
       />
       <SecondaryButton
         label="No, gracias"
         icon={{ ios: 'xmark', android: 'close' }}
+        disabled={asking}
+        accessibilityState={{ disabled: asking }}
         onPress={() => void controls.schedule(plan, 'no')}
       />
     </>
