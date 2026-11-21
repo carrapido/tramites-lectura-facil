@@ -6,18 +6,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/back-button';
 import { PlayButton } from '@/components/play-button';
+import { MAYA_VOICE_FAILED, type VoiceControls } from '@/components/voice-controls';
+import { useScreenVoice } from '@/screens/voice/use-screen-voice';
+import { MACHINE_VOICE_LABEL } from '@/tramites/voice';
 import { theme } from '@/theme';
 
 import { loadLanguage, saveLanguage, type Language } from './language-store';
 
-/** Each language by its own name, tagged in that language; the sample says that name aloud. */
-const LANGUAGES: { id: Language; name: string; speechTag: string }[] = [
-  { id: 'es', name: 'Español', speechTag: 'es-MX' },
-  { id: 'yua', name: "Maaya t'aan", speechTag: 'yua' },
+/** Each language by its own name, tagged in that language; the sample says that name with that language's voice. */
+const LANGUAGES: { id: Language; name: string; a11yLanguage: string }[] = [
+  { id: 'es', name: 'Español', a11yLanguage: 'es-MX' },
+  { id: 'yua', name: "Maaya t'aan", a11yLanguage: 'yua' },
 ];
 
 export function LanguageScreen() {
   const [current] = useState(loadLanguage);
+  const voice = useScreenVoice();
 
   function choose(choice: Language) {
     rememberOrSkip(choice);
@@ -28,10 +32,10 @@ export function LanguageScreen() {
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
         <BackButton />
-        {LANGUAGES.map(({ id, name, speechTag }) => (
+        {LANGUAGES.map(({ id, name, a11yLanguage }) => (
           <View key={id} style={styles.row}>
-            <LanguageOption name={name} speechTag={speechTag} selected={id === current} onPress={() => choose(id)} />
-            <PlayButton text={name} accessibilityLabel={`Escuchar ${name}`} />
+            <LanguageOption name={name} a11yLanguage={a11yLanguage} selected={id === current} onPress={() => choose(id)} />
+            <LanguageSample id={id} name={name} voice={voice} />
           </View>
         ))}
       </ScrollView>
@@ -46,7 +50,7 @@ function leaveScreen() {
   else router.replace('/');
 }
 
-/** A failed save must not trap the person on this screen; the app then stays in the default language. */
+/** A failed save must not trap the person on this screen; the choice then lasts until the app closes. */
 function rememberOrSkip(choice: Language) {
   try {
     saveLanguage(choice);
@@ -55,20 +59,39 @@ function rememberOrSkip(choice: Language) {
   }
 }
 
+function LanguageSample({ id, name, voice }: { id: Language; name: string; voice: VoiceControls }) {
+  const play = () => (id === 'yua' ? voice.playMaya(id, name) : voice.speakSpanish(id, name));
+  return (
+    <>
+      <PlayButton status={voice.statusOf(id)} accessibilityLabel={`Escuchar ${name}`} onPress={play} onStop={voice.stop} />
+      {id === 'yua' ? (
+        <Text style={styles.note} accessibilityLanguage="es-MX">
+          {MACHINE_VOICE_LABEL}
+        </Text>
+      ) : null}
+      {voice.failed(id) ? (
+        <Text style={styles.error} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
+          {MAYA_VOICE_FAILED}
+        </Text>
+      ) : null}
+    </>
+  );
+}
+
 interface LanguageOptionProps {
   name: string;
-  speechTag: string;
+  a11yLanguage: string;
   selected: boolean;
   onPress: () => void;
 }
 
 /** The selected option is filled and shows a check, so color is not the only signal. */
-function LanguageOption({ name, speechTag, selected, onPress }: LanguageOptionProps) {
+function LanguageOption({ name, a11yLanguage, selected, onPress }: LanguageOptionProps) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={name}
-      accessibilityLanguage={speechTag}
+      accessibilityLanguage={a11yLanguage}
       accessibilityState={{ selected }}
       onPress={onPress}
       style={[styles.option, selected && styles.optionSelected]}
@@ -104,4 +127,6 @@ const styles = StyleSheet.create({
   optionSelected: { backgroundColor: theme.color.signal },
   optionLabel: { fontSize: theme.type.title, fontWeight: theme.weight.label, color: theme.color.signal },
   optionLabelSelected: { color: theme.color.onSignal },
+  note: { fontSize: theme.type.label, color: theme.color.inkMuted },
+  error: { fontSize: theme.type.body, color: theme.color.danger },
 });

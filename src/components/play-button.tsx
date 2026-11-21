@@ -1,28 +1,48 @@
-import * as Speech from 'expo-speech';
+import { StyleSheet, Text, View } from 'react-native';
+
+import { theme } from '@/theme';
 
 import { SecondaryButton } from './secondary-button';
+import type { PlayStatus } from './voice-controls';
 
 interface PlayButtonProps {
-  /** What the phone says aloud. */
-  text: string;
+  status: PlayStatus;
+  /** Starts the voice; called only from the tap, never by itself. */
+  onPress: () => void;
+  onStop: () => void;
   /** Spoken name when the visible word "Escuchar" alone is ambiguous; it must keep that word. */
   accessibilityLabel?: string;
 }
 
-/** Audio plays only from this button, never by itself. */
-export function PlayButton({ text, accessibilityLabel = 'Escuchar' }: PlayButtonProps) {
+export function PlayButton({ status, onPress, onStop, accessibilityLabel = 'Escuchar' }: PlayButtonProps) {
+  if (status === 'idle') {
+    return (
+      <SecondaryButton
+        label="Escuchar"
+        accessibilityLabel={accessibilityLabel}
+        icon={{ ios: 'speaker.wave.2.fill', android: 'volume_up' }}
+        onPress={onPress}
+      />
+    );
+  }
   return (
-    <SecondaryButton
-      label="Escuchar"
-      accessibilityLabel={accessibilityLabel}
-      icon={{ ios: 'speaker.wave.2.fill', android: 'volume_up' }}
-      onPress={() => speakAloud(text)}
-    />
+    <View style={styles.active}>
+      <SecondaryButton
+        label="Parar"
+        accessibilityState={{ busy: status === 'loading' }}
+        icon={{ ios: 'stop.fill', android: 'stop' }}
+        onPress={onStop}
+      />
+      {status === 'loading' ? (
+        <Text style={styles.status} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
+          Preparando la voz.
+        </Text>
+      ) : null}
+    </View>
   );
 }
 
-function speakAloud(text: string) {
-  // A new tap replaces the sentence in progress. https://docs.expo.dev/versions/v58.0.0/sdk/speech/
-  void Speech.stop();
-  Speech.speak(text, { language: 'es-MX' });
-}
+const styles = StyleSheet.create({
+  active: { gap: theme.space.xs },
+  status: { fontSize: theme.type.label, color: theme.color.inkMuted },
+});

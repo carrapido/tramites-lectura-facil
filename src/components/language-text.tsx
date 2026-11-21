@@ -1,13 +1,12 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { MACHINE_TRANSLATION_LABEL } from '@/tramites/easy-read';
 import { theme } from '@/theme';
 
 interface LanguageTextProps {
   children: ReactNode;
 }
-
-const MACHINE_TRANSLATION_NOTICE = 'Traducción automática, sin revisar';
 
 /**
  * `accessibilityLanguage` tells VoiceOver which voice to use (iOS only).
@@ -29,7 +28,7 @@ export function MayaText({ children }: LanguageTextProps) {
         {children}
       </Text>
       <Text style={styles.notice} accessibilityLanguage="es-MX">
-        {MACHINE_TRANSLATION_NOTICE}
+        {MACHINE_TRANSLATION_LABEL}
       </Text>
     </View>
   );

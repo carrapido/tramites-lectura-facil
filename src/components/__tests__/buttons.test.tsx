@@ -26,32 +26,45 @@ describe('buttons expose role, Spanish label and a 48 dp target (S1, S2)', () =>
     ['ActionButton', <ActionButton key="a" label="Tome una foto de su papel" icon={ICON} onPress={jest.fn()} />, 'Tome una foto de su papel'],
     ['SecondaryButton', <SecondaryButton key="s" label="Ver conexión" icon={ICON} />, 'Ver conexión'],
     ['BackButton', <BackButton key="b" />, 'Volver'],
-    ['PlayButton', <PlayButton key="p" text="Pague antes del 30 de noviembre." />, 'Escuchar'],
+    ['PlayButton', <PlayButton key="p" status="idle" onPress={jest.fn()} onStop={jest.fn()} />, 'Escuchar'],
   ])('%s', async (_name, element, label) => {
     await render(element);
     const button = screen.getByRole('button', { name: label });
     expect(button.props.accessibilityLanguage).toBe('es-MX');
     expectMinimumTarget(button);
-    expect(screen.getByText(label.startsWith('Escuchar') ? 'Escuchar' : label)).toBeTruthy();
+    expect(screen.getByText(label)).toBeTruthy();
   });
 });
 
-describe('PlayButton (S5: audio only from a large "Escuchar" button)', () => {
-  it('says nothing until it is pressed', async () => {
-    await render(<PlayButton text="Pague antes del 30 de noviembre." />);
+describe('PlayButton (S9: driven by the screen voice, never autoplay)', () => {
+  it('shows "Escuchar" when idle and calls onPress only when pressed', async () => {
+    const onPress = jest.fn();
+    await render(<PlayButton status="idle" onPress={onPress} onStop={jest.fn()} />);
+    expect(onPress).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole('button', { name: 'Escuchar' }));
+    expect(onPress).toHaveBeenCalledTimes(1);
     expect(Speech.speak).not.toHaveBeenCalled();
   });
 
-  it('stops any sentence in progress, then reads its text in Mexican Spanish', async () => {
-    await render(<PlayButton text="Pague antes del 30 de noviembre." />);
-    await fireEvent.press(screen.getByRole('button', { name: 'Escuchar' }));
-    expect(Speech.stop).toHaveBeenCalled();
-    expect(Speech.speak).toHaveBeenCalledWith('Pague antes del 30 de noviembre.', expect.objectContaining({ language: 'es-MX' }));
+  it('shows "Parar" and "Preparando la voz." while loading, and stops from there', async () => {
+    const onStop = jest.fn();
+    await render(<PlayButton status="loading" onPress={jest.fn()} onStop={onStop} />);
+    expect(screen.getByText('Preparando la voz.')).toBeTruthy();
+    const stop = screen.getByRole('button', { name: 'Parar' });
+    expect(stop.props.accessibilityState).toEqual(expect.objectContaining({ busy: true }));
+    await fireEvent.press(stop);
+    expect(onStop).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows "Parar" while playing', async () => {
+    await render(<PlayButton status="playing" onPress={jest.fn()} onStop={jest.fn()} />);
+    expect(screen.getByRole('button', { name: 'Parar' })).toBeTruthy();
+    expect(screen.queryByText('Preparando la voz.')).toBeNull();
   });
 
   it('accepts a longer spoken label that keeps the visible word', async () => {
-    await render(<PlayButton text="Maaya t'aan" accessibilityLabel="Escuchar Maaya t'aan" />);
-    expect(screen.getByRole('button', { name: "Escuchar Maaya t'aan" })).toBeTruthy();
+    await render(<PlayButton status="idle" onPress={jest.fn()} onStop={jest.fn()} accessibilityLabel="Escuchar en maya" />);
+    expect(screen.getByRole('button', { name: 'Escuchar en maya' })).toBeTruthy();
     expect(screen.getByText('Escuchar')).toBeTruthy();
   });
 });
