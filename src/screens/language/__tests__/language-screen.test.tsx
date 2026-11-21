@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { createAudioPlayer } from 'expo-audio';
 import { router } from 'expo-router';
 import * as Speech from 'expo-speech';
 
@@ -35,11 +36,15 @@ describe('LanguageScreen (S4)', () => {
     );
   });
 
-  it('plays a sample only when its button is pressed', async () => {
+  it('plays each sample only when its button is pressed, Maya with the Maya voice (S9)', async () => {
     await render(<LanguageScreen />);
     expect(Speech.speak).not.toHaveBeenCalled();
+    expect(createAudioPlayer).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole('button', { name: 'Escuchar Español' }));
+    expect(Speech.speak).toHaveBeenCalledWith('Español', expect.objectContaining({ language: 'es-MX' }));
     await fireEvent.press(screen.getByRole('button', { name: "Escuchar Maaya t'aan" }));
-    expect(Speech.speak).toHaveBeenCalledWith("Maaya t'aan", expect.anything());
+    expect(createAudioPlayer).toHaveBeenCalledWith({ uri: expect.stringContaining('/api/voice?text=') });
+    expect(screen.getByText('Voz automática, sin revisar')).toBeTruthy();
   });
 
   it('remembers the chosen language and goes back', async () => {

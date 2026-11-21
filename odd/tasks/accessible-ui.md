@@ -28,6 +28,11 @@ Accounts, login, form filling, web build.
 - **S5:** Each fact card shows an icon, one sentence, a play button and "¿De dónde salió?", which reveals the source quote (and the box when available).
 - **S6:** Text scales with the system font size up to 200% without clipping, checked on one Android and one iOS phone; body text contrast is at least 7:1. Blocker: the team's art direction before any visual work.
 
+- **S7 (cards, issue #4 step 3):** "After `POST /api/read`, call `fetchEasyRead(facts)` and render one `FactCard` per `EasyReadCard`. If it fails, keep the objective 3 facts in Spanish."
+- **S8 (Maya on the card):** "`SpanishText(plainSpanish)` always on top; `MayaText(maya)` plus `MACHINE_TRANSLATION_LABEL` when the saved language (`loadLanguage()`) is Maaya t'aan, `maya` is not null and `mayaStatus` is `machine-unreviewed`. Drop the duplicated `CardFact` type and label constant." The read screen follows a language change made in `/idioma` without a restart.
+- **S9 (two voices):** "`PlayButton` gets `onPress` + `status` and is driven by `useCardVoice()`: `speakSpanish(plainSpanish)` and `playMaya(maya)`; `MACHINE_VOICE_LABEL` ("Voz automática, sin revisar") next to the Maya button; show `loading`, and `voice-unavailable` in plain words; never autoplay." Plain words for the failure: "No se pudo oír en maya. Escuche en español." One `useCardVoice()` per screen, so only one voice plays at a time across cards (PR #3 review, W1). The picker's Maya sample uses the Maya voice.
+- **S10 (confirmation sheet):** "La hoja de confirmación del agente, que lea la propuesta en voz alta y muestre la lista y la fecha en grande con los botones "Sí, recuérdeme" y "No, gracias"." From issue #4: "`fetchPlan(facts)` → read the proposal aloud; show the checklist and the reminder date and place; one big "Sí, recuérdeme" and one "No, gracias" → `useReminder().schedule(plan, 'yes' | 'no')`; show `useReminder().message` when permission is denied." From the objective 7 contract: "With `reminder: null`, show the checklist only and no "Sí, recuérdeme" button. Never call `schedule(plan, 'yes')` without the tap." Assumption (audience rule "Audio plays only from a large "Escuchar" button, never by itself"): the proposal is read aloud from its own "Escuchar" button, not automatically. "Sí, recuérdeme" is disabled while the reminder is `asking` (PR #5 review, W2).
+
 ## Tasks
 
 - [x] T1 (S1, S2), inline: `PlayButton` "Escuchar"; role, label, language and 48 dp pinned for every button.
@@ -35,6 +40,11 @@ Accounts, login, form filling, web build.
 - [x] T3 (S4), inline: `/idioma` picker (Español, Maaya t'aan, each with a sample), remembered choice, "Cambiar idioma" on the read screen, no `TextInput` anywhere.
 - [x] T4 (S5), inline: `FactCard` with icon, sentence, "Escuchar" and "¿De dónde salió?"; used by the read screen.
 - [ ] T5 (S6), inline (guard done; device check pending): guard against `allowFontScaling={false}`; 200% font scale checked on one Android and one iOS phone (device, pending).
+
+- [ ] T6 (S8, S9), inline: `PlayButton` takes `status`, `onPress` and `onStop`; `FactCard` takes `EasyReadCard`, the language and screen voice controls; the picker samples use `useCardVoice()`.
+- [ ] T7 (S7, S8), inline: the read screen calls `fetchEasyRead`, falls back to Spanish facts and follows the saved language.
+- [ ] T8 (S10), inline: `ConfirmationSheet` with `fetchPlan`, "Escuchar", the checklist, the date and place in large type, "Sí, recuérdeme" and "No, gracias".
+- [ ] T9 (step 4), inline: phone checklist in `odd/phone-checks.md`; results go into each objective's Log.
 
 Route: every task inline; no Writer trigger (one dependent behavior chain, units under ~100 lines each).
 
@@ -73,3 +83,5 @@ Route: every task inline; no Writer trigger (one dependent behavior chain, units
   - Fix 3: the `app.json` conflict.
   - Also fixed: the save-failure comment, which was flagged as misleading.
   - RED: 3 failing. GREEN: `npm ci && npm test` passes 234/234, and `tsc --noEmit` and `expo lint` are clean.
+- **L11 (user, 2026-11-21, verbatim excerpt):** "Crea una rama nueva desde main actualizado para la integración (por ejemplo `feat/integrate-reading-screen`) y, siguiendo ODD con tests primero, conecta la pantalla de lectura (`FactCard` y el botón "Escuchar") con todo lo que ya está hecho: Tarjetas en español y Maya (`fetchEasyRead`) y el guardado de idioma ("Maaya t'aan"). El botón "Escuchar" con las dos voces (`useCardVoice`). La hoja de confirmación del agente, que lea la propuesta en voz alta y muestre la lista y la fecha en grande con los botones "Sí, recuérdeme" y "No, gracias". Prepara y guía la lista de verificación para las pruebas manuales en el teléfono [...]. No toques los archivos del objetivo 8 (pitch / demo en vivo)."
+- **L12 (route):** `feat/integrate-reading-screen` is stacked on `feat/accessible-ui`, because `FactCard`, `PlayButton` and the language store exist only in PR #2 until it merges. Its PR targets `feat/accessible-ui` and is retargeted to `main` after #2. The `PlayButton` and `FactCard` tests change, because S9 and S8 change their props. That is a spec change requested in issue #4, not an edit to make a RED test pass.
