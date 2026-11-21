@@ -1,5 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
-import * as Speech from 'expo-speech';
+import { createAudioPlayer, type AudioPlayer } from 'expo-audio';
+
+import { fakeAudioPlayer } from '@/__fixtures__/fake-audio-player';
 
 import { fetchEasyRead } from '@/screens/easy-read-client';
 import { useLanguage } from '@/screens/language/language-store';
@@ -11,7 +13,13 @@ jest.mock('expo-speech', () => ({
   speak: jest.fn((_text: string, options?: { onDone?: () => void }) => options?.onDone?.()),
   stop: jest.fn(async () => undefined),
 }));
+jest.mock('expo-audio', () => ({ createAudioPlayer: jest.fn() }));
+jest.mock('@/screens/voice/speak-spanish', () => ({
+  ...jest.requireActual('@/screens/voice/speak-spanish'),
+  speakSpanish: jest.fn(async () => undefined),
+}));
 jest.mock('expo-image-picker', () => ({
+  CameraType: { back: 'back', front: 'front' },
   requestCameraPermissionsAsync: jest.fn(async () => ({ granted: true })),
   launchCameraAsync: jest.fn(async () => ({ canceled: false, assets: [{ base64: 'QUJD', width: 800 }] })),
 }));
@@ -76,11 +84,14 @@ describe('ReadScreen easy-read cards (S7, S8, S9)', () => {
   it('plays one voice at a time across cards: only the last pressed card shows "Parar"', async () => {
     await takePhoto();
     await screen.findByText(CARDS[0].plainSpanish);
-    jest.mocked(Speech.speak).mockImplementation(() => undefined);
+    jest.mocked(createAudioPlayer).mockImplementation(() => fakeAudioPlayer(() => undefined) as AudioPlayer);
     const [first, second] = screen.getAllByRole('button', { name: 'Escuchar' });
     await fireEvent.press(first);
     await fireEvent.press(second);
-    expect(Speech.speak).toHaveBeenLastCalledWith(CARDS[1].plainSpanish, expect.objectContaining({ language: 'es-MX' }));
+    // Spanish now plays the laptop's Gemini voice (field-feedback S3), not the phone voice (objective 5 S1, superseded).
+    expect(jest.mocked(createAudioPlayer).mock.lastCall?.[0]).toEqual(
+      expect.objectContaining({ uri: expect.stringContaining(`text=${encodeURIComponent(CARDS[1].plainSpanish)}&lang=es`) }),
+    );
     expect(screen.getAllByRole('button', { name: 'Parar' })).toHaveLength(1);
     expect(screen.getAllByRole('button', { name: 'Escuchar' })).toHaveLength(1);
   });

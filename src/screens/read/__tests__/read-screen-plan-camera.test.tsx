@@ -6,11 +6,13 @@ import { readNoticePhoto } from '@/screens/read/api-client';
 import { ReadScreen } from '@/screens/read/read-screen';
 import type { Plan } from '@/tramites/plan';
 
+jest.mock('@/screens/voice/speak-spanish', () => ({ speakSpanish: jest.fn(async () => undefined) }));
 jest.mock('expo-speech', () => ({
   speak: jest.fn((_text: string, options?: { onDone?: () => void }) => options?.onDone?.()),
   stop: jest.fn(async () => undefined),
 }));
 jest.mock('expo-image-picker', () => ({
+  CameraType: { back: 'back', front: 'front' },
   requestCameraPermissionsAsync: jest.fn(async () => ({ granted: true })),
   launchCameraAsync: jest.fn(async () => ({ canceled: false, assets: [{ base64: 'QUJD', width: 800 }] })),
 }));

@@ -15,4 +15,10 @@ describe('LanguageScreen Maya sample failure (verifier W5)', () => {
     await render(<LanguageScreen />);
     expect(screen.getByText('No se pudo oír en maya. Escuche en español.')).toBeTruthy();
   });
+
+  it('never shows the Maya failure under the Spanish sample (field-feedback S5)', async () => {
+    jest.mocked(useScreenVoice).mockReturnValue(fakeVoice({}, ['es']));
+    await render(<LanguageScreen />);
+    expect(screen.queryByText('No se pudo oír en maya. Escuche en español.')).toBeNull();
+  });
 });

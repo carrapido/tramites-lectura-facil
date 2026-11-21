@@ -1,5 +1,5 @@
 import type { AudioCache, VoiceSynthesizer } from '@/tramites/ports';
-import { ensureWav, getMayaVoice, MACHINE_VOICE_LABEL, MAX_VOICE_TEXT } from '@/tramites/voice';
+import { ensureWav, getMayaVoice, getVoice, MACHINE_VOICE_LABEL, MAX_VOICE_TEXT } from '@/tramites/voice';
 
 const MAYA = "Bo'ot ka'aj 30.";
 
@@ -17,12 +17,15 @@ function wavBytes(): Uint8Array {
   return ensureWav(pcm);
 }
 
-function fakeSynthesizer(audio: Uint8Array): VoiceSynthesizer & { texts: string[] } {
+function fakeSynthesizer(audio: Uint8Array): VoiceSynthesizer & { texts: string[]; languages: unknown[] } {
   const texts: string[] = [];
+  const languages: unknown[] = [];
   return {
     texts,
-    async synthesize(text) {
+    languages,
+    async synthesize(text, language) {
       texts.push(text);
+      languages.push(language);
       return audio;
     },
   };
@@ -117,5 +120,46 @@ describe('getMayaVoice (S3, S4)', () => {
     await getMayaVoice(MAYA, dependencies);
 
     expect(synthesizer.texts).toEqual([MAYA]);
+  });
+});
+
+const SPANISH = 'Pague antes del 30 de noviembre.';
+
+describe('getVoice by language (field-feedback S3)', () => {
+  it('synthesizes Spanish with the language and stores it under the hash of "es:<text>"', async () => {
+    const synthesizer = fakeSynthesizer(new Uint8Array([9, 9]));
+    const cache = memoryCache();
+
+    const audio = await getVoice(SPANISH, 'es', { synthesizer, cache, hash });
+
+    expect(synthesizer.languages).toEqual(['es']);
+    expect(cache.store.get(`hash:es:${SPANISH}`)).toEqual(audio);
+    expect(cache.store.has(`hash:${SPANISH}`)).toBe(false);
+  });
+
+  it('keeps reading Maya audio stored under the hash of the text alone', async () => {
+    const cached = wavBytes();
+    const synthesizer = fakeSynthesizer(new Uint8Array([1]));
+    const cache = memoryCache([[`hash:${MAYA}`, cached]]);
+
+    expect(await getVoice(MAYA, 'yua', { synthesizer, cache, hash })).toEqual(cached);
+    expect(synthesizer.texts).toEqual([]);
+  });
+
+  it('never answers a Spanish request with the Maya audio of the same text', async () => {
+    const synthesizer = fakeSynthesizer(new Uint8Array([2]));
+    const cache = memoryCache([[`hash:${SPANISH}`, wavBytes()]]);
+
+    await getVoice(SPANISH, 'es', { synthesizer, cache, hash });
+
+    expect(synthesizer.languages).toEqual(['es']);
+  });
+
+  it('passes yua to the synthesizer for Maya', async () => {
+    const synthesizer = fakeSynthesizer(new Uint8Array([3]));
+
+    await getMayaVoice(MAYA, { synthesizer, cache: memoryCache(), hash });
+
+    expect(synthesizer.languages).toEqual(['yua']);
   });
 });

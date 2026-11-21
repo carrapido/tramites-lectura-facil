@@ -65,9 +65,12 @@ export interface NoticeReader {
   read(image: NoticeImage): Promise<NoticeReading>;
 }
 
-/** Speaks a Yucatec Maya text with a machine voice; returns WAV or headerless 16-bit PCM bytes. */
+/**
+ * Speaks a text with a machine voice; returns WAV or headerless 16-bit PCM bytes.
+ * Without a language it speaks Yucatec Maya, as before Spanish moved to the laptop (field-feedback S3).
+ */
 export interface VoiceSynthesizer {
-  synthesize(text: string): Promise<Uint8Array>;
+  synthesize(text: string, language?: LanguageCode): Promise<Uint8Array>;
 }
 
 /** Stores synthesized audio by key so the same text is never paid for twice. */

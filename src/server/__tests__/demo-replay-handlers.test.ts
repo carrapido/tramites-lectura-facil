@@ -172,6 +172,14 @@ describe('GET /api/voice in replay (S5)', () => {
     await expectNotRecorded(await handleVoice(voiceRequest('Mix tu’ux'), replayVoice, true));
   });
 
+  it('returns 404 not-recorded for a Spanish voice when only the Maya voice of that text was recorded (field-feedback S3)', async () => {
+    await store.saveVoice(MAYA[0], WAV);
+
+    const request = new Request(`http://laptop/api/voice?text=${encodeURIComponent(MAYA[0])}&lang=es`);
+
+    await expectNotRecorded(await handleVoice(request, replayVoice, true));
+  });
+
   it('has no X-Demo-Replay header outside replay', async () => {
     const response = await handleVoice(voiceRequest(MAYA[0]), () => ({
       synthesizer: { synthesize: async () => WAV },

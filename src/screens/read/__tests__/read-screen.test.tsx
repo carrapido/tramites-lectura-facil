@@ -1,15 +1,17 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import * as ImagePicker from 'expo-image-picker';
-import * as Speech from 'expo-speech';
 
 import { ReadScreen } from '@/screens/read/read-screen';
+import { speakSpanish } from '@/screens/voice/speak-spanish';
 
+jest.mock('@/screens/voice/speak-spanish', () => ({ speakSpanish: jest.fn(async () => undefined) }));
 jest.mock('expo-speech', () => ({
   speak: jest.fn((_text: string, options?: { onDone?: () => void }) => options?.onDone?.()),
   stop: jest.fn(async () => undefined),
 }));
 
 jest.mock('expo-image-picker', () => ({
+  CameraType: { back: 'back', front: 'front' },
   requestCameraPermissionsAsync: jest.fn(async () => ({ granted: true })),
   launchCameraAsync: jest.fn(async () => ({
     canceled: false,
@@ -34,9 +36,8 @@ describe('ReadScreen (S6, S4)', () => {
 
   it('speaks the reason, then asks permission, then shows the facts with their source', async () => {
     const order: string[] = [];
-    jest.mocked(Speech.speak).mockImplementationOnce((_text, options) => {
+    jest.mocked(speakSpanish).mockImplementationOnce(async () => {
       order.push('speak');
-      options?.onDone?.();
     });
     jest.mocked(ImagePicker.requestCameraPermissionsAsync).mockImplementationOnce(async () => {
       order.push('permission');
@@ -52,7 +53,7 @@ describe('ReadScreen (S6, S4)', () => {
 
     expect(await screen.findByText('Pague antes del 30 de noviembre.')).toBeTruthy();
     expect(order).toEqual(['speak', 'permission']);
-    expect(jest.mocked(Speech.speak).mock.calls[0][1]).toEqual(expect.objectContaining({ language: 'es-MX' }));
+    expect(speakSpanish).toHaveBeenCalledWith('Necesitamos la cámara para leer su papel.');
     expect(screen.queryByText('vence el día 30 de noviembre de 2026')).toBeNull();
 
     await fireEvent.press(screen.getByRole('button', { name: '¿De dónde salió?' }));

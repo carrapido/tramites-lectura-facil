@@ -21,8 +21,13 @@ jest.mock('expo-speech', () => ({
   stop: jest.fn(async () => undefined),
 }));
 jest.mock('expo-image-picker', () => ({
+  CameraType: { back: 'back', front: 'front' },
   requestCameraPermissionsAsync: jest.fn(async () => ({ granted: true })),
   launchCameraAsync: jest.fn(async () => ({ canceled: false, assets: [{ base64: 'QUJD', width: 800 }] })),
+}));
+jest.mock('@/screens/voice/speak-spanish', () => ({
+  ...jest.requireActual('@/screens/voice/speak-spanish'),
+  speakSpanish: jest.fn(async () => undefined),
 }));
 jest.mock('@/screens/read/api-client', () => ({ readNoticePhoto: jest.fn() }));
 jest.mock('@/screens/easy-read-client', () => ({ fetchEasyRead: jest.fn() }));

@@ -1,7 +1,6 @@
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { Link, router } from 'expo-router';
-import * as Speech from 'expo-speech';
 import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,12 +8,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActionButton } from '@/components/action-button';
 import { CategoryRow } from '@/components/category-row';
 import { FactCard } from '@/components/fact-card';
+import { LoadingIndicator } from '@/components/loading-indicator';
 import { SecondaryButton } from '@/components/secondary-button';
 import type { VoiceControls } from '@/components/voice-controls';
 import { REPLAY_LABEL } from '@/screens/demo-label';
 import { fetchEasyRead } from '@/screens/easy-read-client';
 import { useLanguage } from '@/screens/language/language-store';
 import { fetchPlan, type PlanResult as PlanResponse } from '@/screens/plan/plan-client';
+import { speakSpanish } from '@/screens/voice/speak-spanish';
 import { useScreenVoice } from '@/screens/voice/use-screen-voice';
 import { CATEGORY_NOTICE, NOTICE_BEFORE_READING, type Category } from '@/tramites/category';
 import type { EasyReadCard } from '@/tramites/easy-read';
@@ -27,6 +28,7 @@ import { readNoticePhoto, type NoticePhoto, type ReadFact } from './api-client';
 type ReadState =
   | { step: 'idle' }
   | { step: 'reading' }
+  | { step: 'preparing' }
   | { step: 'cards'; category: Category; facts: ReadFact[]; cards: EasyReadCard[]; replayed: boolean }
   | { step: 'failed'; message: string };
 
@@ -38,6 +40,10 @@ type PlanState =
   | { step: 'failed' };
 
 const PLAN_FAILED = 'No pudimos preparar la lista. Sus tarjetas siguen aquí.';
+
+const READING = 'Leyendo su papel.';
+const PREPARING_CARDS = 'Preparando sus tarjetas.';
+const PREPARING_PLAN = 'Preparando su lista.';
 
 const CAMERA_REASON = 'Necesitamos la cámara para leer su papel.';
 const PERMISSION_DENIED = 'Sin permiso para la cámara. Actívelo en Ajustes del teléfono.';
@@ -56,7 +62,7 @@ const FAILURE_TEXT: Record<string, string> = {
 };
 const UPSTREAM_FAILED = 'Google no respondió. Intente otra vez en un momento.';
 
-/** If the phone never reports the end of the sentence, the camera still opens after this. */
+/** If the voice never reports the end of the sentence, the camera still opens after this. */
 const SPEECH_FALLBACK_MS = 8_000;
 /** JPEG quality for the camera and the resize; keeps text legible and the upload small. */
 const PHOTO_QUALITY = 0.5;
@@ -142,6 +148,7 @@ function useNoticeReading(silenceVoices: () => void) {
       return;
     }
     const proposal = fetchPlan(body.facts, body.category);
+    setState({ step: 'preparing' });
     const easyRead = await easyReadCards(body.facts);
     const replayed = body.replayed === true || easyRead.replayed;
     setState({ step: 'cards', category: body.category, facts: body.facts, cards: easyRead.cards, replayed });
@@ -182,21 +189,27 @@ function useExclusiveTask() {
   return { busy, runExclusive };
 }
 
-/** Resolves when the sentence ends, fails or stops, or after a bounded wait if the phone stays silent. */
+/** Resolves when the Spanish voice ends or fails, or after a bounded wait if it stays silent. */
 function speak(sentence: string): Promise<void> {
-  // https://docs.expo.dev/versions/v58.0.0/sdk/speech/
   return new Promise((resolve) => {
     const fallback = setTimeout(finish, SPEECH_FALLBACK_MS);
     function finish() {
       clearTimeout(fallback);
       resolve();
     }
-    Speech.speak(sentence, { language: 'es-MX', onDone: finish, onStopped: finish, onError: finish });
+    speakSpanish(sentence).then(finish, finish);
   });
 }
 
 async function capturePhoto(): Promise<NoticePhoto | 'canceled' | null> {
-  const result = await ImagePicker.launchCameraAsync({ base64: true, quality: PHOTO_QUALITY, mediaTypes: ['images'] });
+  // The rear camera, so nobody has to switch sides (field-feedback S2).
+  // https://docs.expo.dev/versions/v58.0.0/sdk/imagepicker/#cameratype
+  const result = await ImagePicker.launchCameraAsync({
+    base64: true,
+    quality: PHOTO_QUALITY,
+    mediaTypes: ['images'],
+    cameraType: ImagePicker.CameraType.back,
+  });
   if (result.canceled) return 'canceled';
   const asset = result.assets[0];
   if (!asset) return null;
@@ -271,7 +284,8 @@ interface ReadResultProps {
 }
 
 function ReadResult({ state, showMaya, voice }: ReadResultProps) {
-  if (state.step === 'reading') return <StatusText>Leyendo su papel.</StatusText>;
+  if (state.step === 'reading') return <LoadingIndicator text={READING} />;
+  if (state.step === 'preparing') return <LoadingIndicator text={PREPARING_CARDS} />;
   if (state.step === 'failed') {
     return (
       <Text style={styles.error} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
@@ -299,7 +313,7 @@ function ReadResult({ state, showMaya, voice }: ReadResultProps) {
 }
 
 function PlanResult({ plan, voice }: { plan: PlanState; voice: VoiceControls }) {
-  if (plan.step === 'loading') return <StatusText>Preparando su lista.</StatusText>;
+  if (plan.step === 'loading') return <LoadingIndicator text={PREPARING_PLAN} />;
   if (plan.step === 'failed') {
     return (
       <Text style={styles.error} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
@@ -311,18 +325,9 @@ function PlanResult({ plan, voice }: { plan: PlanState; voice: VoiceControls }) 
   return null;
 }
 
-function StatusText({ children }: { children: string }) {
-  return (
-    <Text style={styles.status} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
-      {children}
-    </Text>
-  );
-}
-
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.color.paper },
   content: { padding: theme.space.lg, gap: theme.space.lg },
-  status: { fontSize: theme.type.body, color: theme.color.ink },
   replay: { fontSize: theme.type.label, fontWeight: theme.weight.label, color: theme.color.ink },
   facts: { gap: theme.space.md },
   error: { fontSize: theme.type.body, color: theme.color.danger },

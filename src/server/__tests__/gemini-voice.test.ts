@@ -63,6 +63,38 @@ describe('GeminiVoiceSynthesizer (S2)', () => {
     await expect(new GeminiVoiceSynthesizer(speech).synthesize(MAYA)).rejects.toThrow();
   });
 
+  it('keeps the Maya request without a language code when no language is given', async () => {
+    const speech = client(async () => audioAnswer('AAAA'));
+
+    await new GeminiVoiceSynthesizer(speech).synthesize(MAYA);
+    await new GeminiVoiceSynthesizer(speech).synthesize(MAYA, 'yua');
+
+    expect(speech.requests[1]).toEqual(speech.requests[0]);
+    expect(JSON.stringify(speech.requests[0])).not.toContain('languageCode');
+    expect(JSON.stringify(speech.requests[0])).toContain('Slow and clear, for an older listener.');
+  });
+
+  it('asks for Mexican Spanish with a Spanish style for lang es (field-feedback S3)', async () => {
+    const speech = client(async () => audioAnswer('AAAA'));
+
+    await new GeminiVoiceSynthesizer(speech).synthesize('Pague antes del 30.', 'es');
+
+    expect(speech.requests).toEqual([
+      expect.objectContaining({
+        model: 'gemini-3.8-flash-lite-tts',
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: 'Pague antes del 30.', speechMetadata: { style: 'Español de México, claro, pausado y cálido.' } }],
+          },
+        ],
+        config: expect.objectContaining({
+          speechConfig: { languageCode: 'es-MX', voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
+        }),
+      }),
+    ]);
+  });
+
   it('maps missing ADC to CredentialsUnavailableError', async () => {
     const speech = client(async () => {
       throw new Error(ADC_MESSAGE);

@@ -1,12 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import * as ImagePicker from 'expo-image-picker';
-import * as Speech from 'expo-speech';
 
 import { ReadScreen } from '@/screens/read/read-screen';
+import { speakSpanish } from '@/screens/voice/speak-spanish';
 
+jest.mock('@/screens/voice/speak-spanish', () => ({ speakSpanish: jest.fn() }));
 jest.mock('expo-speech', () => ({ speak: jest.fn(), stop: jest.fn(async () => undefined) }));
 
 jest.mock('expo-image-picker', () => ({
+  CameraType: { back: 'back', front: 'front' },
   requestCameraPermissionsAsync: jest.fn(),
   launchCameraAsync: jest.fn(),
 }));
@@ -57,7 +59,7 @@ function nextMacrotask() {
 
 beforeEach(() => {
   jest.resetAllMocks();
-  jest.mocked(Speech.speak).mockImplementation((_text, options) => options?.onDone?.());
+  jest.mocked(speakSpanish).mockResolvedValue(undefined);
   jest.mocked(ImagePicker.requestCameraPermissionsAsync).mockResolvedValue({ granted: true } as ImagePicker.CameraPermissionResponse);
   jest.mocked(ImagePicker.launchCameraAsync).mockResolvedValue({
     canceled: false,
@@ -121,7 +123,7 @@ describe('ReadScreen review follow-ups (S1, S4, S6)', () => {
 
   it('still asks for the camera when speech never reports the end', async () => {
     jest.useFakeTimers();
-    jest.mocked(Speech.speak).mockImplementationOnce(() => undefined);
+    jest.mocked(speakSpanish).mockImplementationOnce(() => new Promise<void>(() => undefined));
     jest.mocked(ImagePicker.launchCameraAsync).mockResolvedValueOnce({ canceled: true, assets: null });
 
     await render(<ReadScreen />);
@@ -136,7 +138,7 @@ describe('ReadScreen review follow-ups (S1, S4, S6)', () => {
   });
 
   it('continues when speech reports an error', async () => {
-    jest.mocked(Speech.speak).mockImplementationOnce((_text, options) => options?.onError?.(new Error('no voice')));
+    jest.mocked(speakSpanish).mockRejectedValueOnce(new Error('no voice'));
     jest.mocked(ImagePicker.launchCameraAsync).mockResolvedValueOnce({ canceled: true, assets: null });
 
     await render(<ReadScreen />);

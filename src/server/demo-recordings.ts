@@ -3,7 +3,8 @@ import { dirname, join } from 'node:path';
 
 import { z } from 'zod';
 
-import type { Fact, NoticeReading, Plan } from '@/tramites/ports';
+import type { Fact, LanguageCode, NoticeReading, Plan } from '@/tramites/ports';
+import { voiceKeyText } from '@/tramites/voice';
 
 import { factSchema, lenientCategorySchema } from './fact-schema';
 import { sha256 } from './hash';
@@ -87,17 +88,18 @@ export class DemoRecordings {
     return this.updateMap(PLANS, plansSchema, [[planKey(facts), plan]]);
   }
 
-  async voice(text: string): Promise<Uint8Array | null> {
+  /** Voices are keyed like the audio cache, so Maya recordings made before Spanish still replay. */
+  async voice(text: string, language: LanguageCode = 'yua'): Promise<Uint8Array | null> {
     try {
-      return new Uint8Array(await readFile(this.voiceFileOf(text)));
+      return new Uint8Array(await readFile(this.voiceFileOf(text, language)));
     } catch (error) {
       if (isMissingFile(error)) return null;
       throw error;
     }
   }
 
-  saveVoice(text: string, audio: Uint8Array): Promise<void> {
-    return this.serialized(() => writeAtomically(this.voiceFileOf(text), audio));
+  saveVoice(text: string, audio: Uint8Array, language: LanguageCode = 'yua'): Promise<void> {
+    return this.serialized(() => writeAtomically(this.voiceFileOf(text, language), audio));
   }
 
   private async readMap<T>(name: string, schema: z.ZodType<Record<string, T>>): Promise<Record<string, T>> {
@@ -122,8 +124,8 @@ export class DemoRecordings {
     return join(this.root, name);
   }
 
-  private voiceFileOf(text: string): string {
-    return join(this.root, VOICE, `${sha256(text)}.wav`);
+  private voiceFileOf(text: string, language: LanguageCode): string {
+    return join(this.root, VOICE, `${sha256(voiceKeyText(text, language))}.wav`);
   }
 }
 

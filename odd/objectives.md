@@ -19,3 +19,4 @@ And for this session:
 7. [Agentic checklist and reminder](tasks/agentic-checklist.md)
 8. [Easy-read pitch and live demo](tasks/easyread-pitch.md)
 9. [Any paper, read by its context](tasks/context-categories.md)
+10. [Field feedback from the first phone test](tasks/field-feedback.md)

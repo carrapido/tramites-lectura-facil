@@ -1,7 +1,7 @@
 import { Modality } from '@google/genai';
 import { z } from 'zod';
 
-import type { VoiceSynthesizer } from '@/tramites/ports';
+import type { LanguageCode, VoiceSynthesizer } from '@/tramites/ports';
 
 import { withCredentialMapping } from './google-errors';
 
@@ -14,7 +14,7 @@ export interface GenerateSpeechRequest {
   contents: { role: 'user'; parts: { text: string; speechMetadata: { style: string } }[] }[];
   config: {
     responseModalities: Modality[];
-    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: string } } };
+    speechConfig: { languageCode?: string; voiceConfig: { prebuiltVoiceConfig: { voiceName: string } } };
   };
 }
 
@@ -28,7 +28,16 @@ export const GEMINI_TTS_MODEL = 'gemini-3.8-flash-lite-tts';
 
 const VOICE_NAME = 'Kore';
 
-const STYLE = 'Slow and clear, for an older listener.';
+/** How each language is spoken. Maya has no language code: it is not in the TTS language list. */
+const SPEECH_BY_LANGUAGE: Record<LanguageCode, { style: string; languageCode?: string }> = {
+  yua: { style: 'Slow and clear, for an older listener.' },
+  /**
+   * Spanish is a supported Gemini TTS language. `languageCode` is typed in @google/genai 3.6.1
+   * (`SpeechConfig.languageCode`, node_modules/@google/genai/dist/genai.d.ts:17300).
+   * https://docs.cloud.google.com/text-to-speech/docs/gemini-tts
+   */
+  es: { style: 'Español de México, claro, pausado y cálido.', languageCode: 'es-MX' },
+};
 
 /** The audio arrives base64-encoded in the first part. https://ai.google.dev/api/caching#Blob */
 const speechAnswer = z.object({
@@ -44,20 +53,22 @@ const speechAnswer = z.object({
 export class GeminiVoiceSynthesizer implements VoiceSynthesizer {
   constructor(private readonly client: GenerateSpeechClient) {}
 
-  async synthesize(text: string): Promise<Uint8Array> {
-    const response = await withCredentialMapping(() => this.client.generateContent(speechRequest(text)));
+  async synthesize(text: string, language: LanguageCode = 'yua'): Promise<Uint8Array> {
+    const response = await withCredentialMapping(() => this.client.generateContent(speechRequest(text, language)));
     const base64 = speechAnswer.parse(response).candidates[0].content.parts[0].inlineData.data;
     return new Uint8Array(Buffer.from(base64, 'base64'));
   }
 }
 
-function speechRequest(text: string): GenerateSpeechRequest {
+function speechRequest(text: string, language: LanguageCode): GenerateSpeechRequest {
+  const { style, languageCode } = SPEECH_BY_LANGUAGE[language];
+  const voiceConfig = { prebuiltVoiceConfig: { voiceName: VOICE_NAME } };
   return {
     model: GEMINI_TTS_MODEL,
-    contents: [{ role: 'user', parts: [{ text, speechMetadata: { style: STYLE } }] }],
+    contents: [{ role: 'user', parts: [{ text, speechMetadata: { style } }] }],
     config: {
       responseModalities: [Modality.AUDIO],
-      speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: VOICE_NAME } } },
+      speechConfig: languageCode ? { languageCode, voiceConfig } : { voiceConfig },
     },
   };
 }
