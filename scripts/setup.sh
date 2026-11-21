@@ -22,9 +22,16 @@ if ! gcloud auth application-default print-access-token >/dev/null 2>&1; then
 fi
 
 step "Local config"
-project="${GOOGLE_CLOUD_PROJECT:-$(gcloud config get project 2>/dev/null)}"
 local_env=".env.local"
-if [ ! -f "$local_env" ]; then
+# '|| true': with set -e a failing substitution would end the script without a message.
+project="${GOOGLE_CLOUD_PROJECT:-$(gcloud config get project 2>/dev/null || true)}"
+# An existing file with an empty project is the leftover of an earlier run: regenerate it.
+if [ ! -f "$local_env" ] || grep -Eq '^GOOGLE_CLOUD_PROJECT=[[:space:]]*$' "$local_env"; then
+  if [ -z "$project" ]; then
+    echo "No Google Cloud project found. Set a project: gcloud config set project <id>"
+    echo "Or run: export GOOGLE_CLOUD_PROJECT=<id>   Then run this script again."
+    exit 1
+  fi
   printf 'GOOGLE_CLOUD_PROJECT=%s\nGOOGLE_CLOUD_LOCATION=global\nGOOGLE_CLOUD_QUOTA_PROJECT=%s\n' "$project" "$project" > "$local_env"
   echo "Wrote $local_env for project $project (git-ignored)."
 else

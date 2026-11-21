@@ -108,4 +108,28 @@ describe('POST /api/read end to end with a fake Gemini (S1, S2, S5)', () => {
       fix: 'gcloud auth application-default login',
     });
   });
+
+  it('returns 500 config-missing when the server configuration is invalid', async () => {
+    const response = await handleRead(post({ imageBase64: PHOTO, mimeType: 'image/jpeg' }), () => {
+      throw new Error('GOOGLE_CLOUD_PROJECT missing');
+    });
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({ ok: false, reason: 'config-missing' });
+  });
+
+  it('rejects a declared Content-Length above the cap with 400 before reading the body (S1)', async () => {
+    const compose = jest.fn(() => new GeminiNoticeReader(geminiAnswering({ readable: true, transcript: TRANSCRIPT, facts: FACTS })));
+    const request = new Request('http://laptop/api/read', {
+      method: 'POST',
+      headers: { 'Content-Length': String(6 * 1024 * 1024) },
+      body: JSON.stringify({ imageBase64: PHOTO, mimeType: 'image/jpeg' }),
+    });
+
+    const response = await handleRead(request, compose);
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ ok: false, reason: 'invalid-request' });
+    expect(request.bodyUsed).toBe(false);
+    expect(compose).not.toHaveBeenCalled();
+  });
 });

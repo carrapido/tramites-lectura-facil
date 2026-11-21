@@ -56,4 +56,4 @@ unslop skill in `.agents/skills/unslop` by Damir Sokolovsky, CC BY 4.0 (https://
 
 ## Teammate setup
 
-`npm run setup` checks Node 24 and gcloud ADC, writes a git-ignored local env file from your gcloud project, then runs `npm ci` and `npm test`.
+`npm run setup` checks Node 24 and gcloud ADC, writes a git-ignored local env file from your gcloud project, then runs `npm ci` and `npm test`. With no project it stops before writing: run `gcloud config set project <id>` or `export GOOGLE_CLOUD_PROJECT=<id>`. A local env file with an empty project is regenerated; a filled one is never overwritten.

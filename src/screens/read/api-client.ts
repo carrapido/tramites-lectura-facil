@@ -2,6 +2,12 @@ import { z } from 'zod';
 
 import { apiUrl } from '@/screens/api-url';
 
+/**
+ * The server's Gemini call takes about 11 s and the Expo dev server closes its socket at 30 s.
+ * 45 s covers both with margin, so a stalled request ends instead of hanging the button.
+ */
+export const READ_DEADLINE_MS = 45_000;
+
 const fact = z.object({
   kind: z.string(),
   text: z.string(),
@@ -22,15 +28,34 @@ export interface NoticePhoto {
 }
 
 /** Sends the photo to the laptop and returns the traceable facts or the failure reason. */
-export async function readNoticePhoto(photo: NoticePhoto): Promise<ReadBody> {
+export async function readNoticePhoto(photo: NoticePhoto, deadlineMs = READ_DEADLINE_MS): Promise<ReadBody> {
+  // https://developer.mozilla.org/en-US/docs/Web/API/AbortController
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), deadlineMs);
   try {
-    const response = await fetch(apiUrl('/api/read'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageBase64: photo.base64, mimeType: photo.mimeType }),
-    });
-    return readBody.parse(await response.json());
+    return await requestFacts(photo, controller.signal);
   } catch {
-    return { ok: false, reason: 'unreachable' };
+    return { ok: false, reason: controller.signal.aborted ? 'timeout' : 'unreachable' };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function requestFacts(photo: NoticePhoto, signal: AbortSignal): Promise<ReadBody> {
+  const response = await fetch(apiUrl('/api/read'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageBase64: photo.base64, mimeType: photo.mimeType }),
+    signal,
+  });
+  const parsed = readBody.safeParse(parseJsonOrNull(await response.text()));
+  return parsed.success ? parsed.data : { ok: false, reason: 'bad-response' };
+}
+
+function parseJsonOrNull(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
   }
 }

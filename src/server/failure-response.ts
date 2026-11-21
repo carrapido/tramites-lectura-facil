@@ -11,3 +11,8 @@ export function googleFailureResponse(error: unknown, route: string): Response {
   console.error(`[${route}] Google call failed`, error);
   return Response.json({ ok: false, reason: 'upstream-failed' }, { status: 502 });
 }
+
+/** The composition root failed, usually a missing or invalid environment variable. */
+export function configMissingResponse(): Response {
+  return Response.json({ ok: false, reason: 'config-missing' }, { status: 500 });
+}
