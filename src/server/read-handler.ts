@@ -6,6 +6,7 @@ import { readNotice } from '@/tramites/read-notice';
 
 import { composeOrNull } from './compose-or-null';
 import { configMissingResponse, googleFailureResponse } from './failure-response';
+import { declaresOversizedBody, invalidRequestResponse, jsonOrNull } from './request-body';
 
 /** About 4 MB of image bytes; base64 needs 4 characters for every 3 bytes. */
 const MAX_IMAGE_BASE64_LENGTH = Math.ceil((4 * 1024 * 1024 * 4) / 3);
@@ -20,7 +21,7 @@ const readRequest = z.object({
 
 /** POST /api/read: photo in, traceable facts out (S1-S4). */
 export async function handleRead(request: Request, compose: () => NoticeReader): Promise<Response> {
-  if (declaresOversizedBody(request)) return invalidRequestResponse();
+  if (declaresOversizedBody(request, MAX_REQUEST_BYTES)) return invalidRequestResponse();
   const body = readRequest.safeParse(await jsonOrNull(request));
   if (!body.success) return invalidRequestResponse();
 
@@ -33,22 +34,5 @@ export async function handleRead(request: Request, compose: () => NoticeReader):
   } catch (error) {
     if (error instanceof UnreadableNoticeError) return Response.json({ ok: false, reason: 'unreadable' }, { status: 422 });
     return googleFailureResponse(error, 'read');
-  }
-}
-
-/** Rejects an oversized upload from its header, before the body is buffered in memory. */
-function declaresOversizedBody(request: Request): boolean {
-  return Number(request.headers.get('content-length') ?? 0) > MAX_REQUEST_BYTES;
-}
-
-function invalidRequestResponse(): Response {
-  return Response.json({ ok: false, reason: 'invalid-request' }, { status: 400 });
-}
-
-async function jsonOrNull(request: Request): Promise<unknown> {
-  try {
-    return await request.json();
-  } catch {
-    return null;
   }
 }
