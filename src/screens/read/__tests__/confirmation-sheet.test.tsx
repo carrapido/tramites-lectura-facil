@@ -105,3 +105,17 @@ describe('ConfirmationSheet (S10)', () => {
     expect(screen.queryByRole('button', { name: 'No, gracias' })).toBeNull();
   });
 });
+
+describe('ConfirmationSheet follow-ups (verifier W1, W6)', () => {
+  it('disables "No, gracias" too while the phone asks for permission', async () => {
+    await render(<ConfirmationSheet plan={PLAN} voice={fakeVoice()} reminder={reminderControls('asking')} />);
+    expect(screen.getByRole('button', { name: 'No, gracias' }).props.accessibilityState).toEqual(
+      expect.objectContaining({ disabled: true }),
+    );
+  });
+
+  it('shows a malformed due date as written instead of "NaN"', () => {
+    expect(formatDueDate('30/11/2026')).toBe('30/11/2026');
+    expect(formatDueDate('2026-13-01')).toBe('2026-13-01');
+  });
+});
