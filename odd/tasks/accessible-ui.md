@@ -130,3 +130,9 @@ Route: every task inline; no Writer trigger (one dependent behavior chain, units
   1. Carrapido approves #2; merge it.
   2. Retarget #7 to `main`; Carrapido reviews it.
   3. Run `odd/phone-checks.md` on a phone and write the results in each Log. That closes T5.
+- **L18 (user, 2026-11-21, verbatim):** "Sube el arreglo, Cambia a #7 a main y integra el 7# -> #6"
+- **L19 (PR #7 review W1):**
+  - "Cambiar idioma" calls `voice.stop()` before `router.push('/idioma')`, because the read screen stays mounted under the picker.
+  - RED: `read-screen-language-voice.test.tsx` failed on "remove before push". GREEN: 272/272, and `tsc` and lint are clean.
+  - Also from the review: checklist keys are `${index}:${sourceQuote}`, the status texts are live regions in `es-MX`, and `useReminder()` is called in the component body.
+  - Left for later: W2 (replay labels after #6), W3 (camera disabled while the plan loads), the snapshot cache in `useLanguage`, and the `jest.setup.ts` fake player.

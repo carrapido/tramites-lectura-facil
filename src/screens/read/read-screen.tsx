@@ -77,7 +77,7 @@ export function ReadScreen() {
         <SecondaryButton
           label="Cambiar idioma"
           icon={{ ios: 'globe', android: 'language' }}
-          onPress={() => router.push('/idioma')}
+          onPress={() => openLanguagePicker(voice)}
         />
         <Link href="./diagnostico" asChild>
           <SecondaryButton label="Ver conexión" icon={{ ios: 'wifi', android: 'wifi' }} />
@@ -200,6 +200,12 @@ async function resizedJpegBase64(uri: string): Promise<string | undefined> {
   return saved.base64;
 }
 
+/** The read screen stays mounted under /idioma, so its voice must stop first (PR #7 review, W1). */
+function openLanguagePicker(voice: VoiceControls) {
+  voice.stop();
+  router.push('/idioma');
+}
+
 /** The easy-read cards, or the objective 3 facts in Spanish when they fail (S7). */
 async function easyReadCards(facts: ReadFact[]): Promise<EasyReadCard[]> {
   const easyRead = await fetchEasyRead(facts);
@@ -221,7 +227,7 @@ interface ReadResultProps {
 }
 
 function ReadResult({ state, showMaya, voice }: ReadResultProps) {
-  if (state.step === 'reading') return <Text style={styles.status}>Leyendo su papel.</Text>;
+  if (state.step === 'reading') return <StatusText>Leyendo su papel.</StatusText>;
   if (state.step === 'failed') {
     return (
       <Text style={styles.error} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
@@ -248,7 +254,7 @@ function ReadResult({ state, showMaya, voice }: ReadResultProps) {
 }
 
 function PlanResult({ plan, voice }: { plan: PlanState; voice: VoiceControls }) {
-  if (plan.step === 'loading') return <Text style={styles.status}>Preparando su lista.</Text>;
+  if (plan.step === 'loading') return <StatusText>Preparando su lista.</StatusText>;
   if (plan.step === 'failed') {
     return (
       <Text style={styles.error} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
@@ -258,6 +264,14 @@ function PlanResult({ plan, voice }: { plan: PlanState; voice: VoiceControls }) 
   }
   if (plan.step === 'ready') return <PlanSheet plan={plan.plan} voice={voice} />;
   return null;
+}
+
+function StatusText({ children }: { children: string }) {
+  return (
+    <Text style={styles.status} accessibilityLanguage="es-MX" accessibilityLiveRegion="polite">
+      {children}
+    </Text>
+  );
 }
 
 const styles = StyleSheet.create({

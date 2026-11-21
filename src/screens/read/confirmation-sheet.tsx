@@ -29,7 +29,8 @@ interface PlanSheetProps {
 
 /** The agent's proposal with its own reminder controls; remount it for a new plan to start fresh. */
 export function PlanSheet({ plan, voice }: PlanSheetProps) {
-  return <ConfirmationSheet plan={plan} voice={voice} reminder={useReminder()} />;
+  const reminder = useReminder();
+  return <ConfirmationSheet plan={plan} voice={voice} reminder={reminder} />;
 }
 
 interface ConfirmationSheetProps extends PlanSheetProps {
@@ -49,8 +50,8 @@ export function ConfirmationSheet({ plan, voice, reminder }: ConfirmationSheetPr
         onPress={() => voice.speakSpanish(VOICE_KEY, spokenProposal(plan))}
         onStop={voice.stop}
       />
-      {plan.checklist.map((item) => (
-        <View key={item.sourceQuote} style={styles.item}>
+      {plan.checklist.map((item, index) => (
+        <View key={`${index}:${item.sourceQuote}`} style={styles.item}>
           <SpanishText>{item.text}</SpanishText>
           <SourceQuote quote={item.sourceQuote} />
         </View>
