@@ -55,6 +55,21 @@ Plain Spanish is spoken by the phone (`expo-speech`, `es-MX`, offline). Yucatec 
 - The app calls `useCardVoice()` in `src/screens/voice/use-card-voice.ts`. Nothing plays without a tap; one voice at a time.
 - Label rule: every Maya play button shows "Voz automática, sin revisar" (`MACHINE_VOICE_LABEL`).
 
+## Agentic checklist and reminder
+
+`POST /api/plan` turns the facts from `POST /api/read` into a proposal: what to bring and when to go. Nothing happens on the phone until the person taps "Sí".
+
+- Request: `{ "facts": Fact[] }`, 1 to 7 facts, the same shape as `POST /api/easy-read`. Anything else returns 400 `invalid-request`.
+- Response: `{ "ok": true, "plan": { "checklist": [{ text, sourceQuote }], "reminder": { dueDate, title, place?, sourceQuote } | null } }`.
+- Gemini (`gemini-3.8-flash`) answers only through two declared tools, `create_checklist` and `schedule_reminder` (function calling mode `ANY`).
+- Traceability: every item and the reminder keep a `sourceQuote` found literally in the facts' quotes; the rest is dropped. At most 6 items, 15 words or fewer each.
+- The reminder's `dueDate` must be a real date, today or later in Mexico's `America/Merida` time zone; otherwise `reminder` is `null` and the checklist stays.
+- Missing ADC returns 503 `adc-missing`, a bad environment 500 `config-missing`, other Gemini failures 502 `upstream-failed`.
+- The app calls `fetchPlan(facts)` in `src/screens/plan/plan-client.ts` and `useReminder()` in `src/screens/plan/use-reminder.ts`.
+- The "Sí" rule: `useReminder().schedule(plan, 'yes')` is the only path to a notification. Any other answer schedules nothing (`executePlan` in `src/tramites/plan.ts`).
+- After "Sí", the phone says "Para avisarle antes de la fecha, necesitamos permiso.", then asks for notification permission. Denied shows "No podemos avisarle. Active las notificaciones en Ajustes."
+- Two local notifications (`expo-notifications`, they work in Expo Go): the day before at 10:00 and the due day at 08:00, phone time. Moments already past are skipped. Push notifications are not used.
+
 ## When the event Wi-Fi blocks phone-to-laptop traffic
 
 - Tunnel: `npx expo start --tunnel` (https://docs.expo.dev/versions/v58.0.0/more/expo-cli/).

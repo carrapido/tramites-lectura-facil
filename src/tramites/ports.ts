@@ -71,3 +71,34 @@ export interface AudioCache {
   get(key: string): Promise<Uint8Array | null>;
   set(key: string, audio: Uint8Array): Promise<void>;
 }
+
+/** One thing to bring or do, with the literal quote of the notice it came from. */
+export interface ChecklistItem {
+  text: string;
+  sourceQuote: string;
+}
+
+/** A deadline worth a phone reminder. */
+export interface Reminder {
+  /** Calendar date as `YYYY-MM-DD`. */
+  dueDate: string;
+  title: string;
+  place?: string;
+  sourceQuote: string;
+}
+
+/** What to bring and when to go. */
+export interface Plan {
+  checklist: ChecklistItem[];
+  reminder: Reminder | null;
+}
+
+/** Proposes a plan from traceable facts, before the traceability and date checks. */
+export interface PlanProposer {
+  propose(facts: Fact[]): Promise<Plan>;
+}
+
+/** Schedules the reminder on the phone. Called only after the person says "Sí". */
+export interface ReminderScheduler {
+  schedule(reminder: Reminder, checklist: ChecklistItem[]): Promise<void>;
+}
