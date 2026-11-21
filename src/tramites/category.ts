@@ -26,7 +26,8 @@ export const CATEGORY_NOTICE: Record<Category, string> = {
 };
 
 /** Notice shown before any paper has been read. */
-export const NOTICE_BEFORE_READING = REVIEW_ORIGINAL;
+/** Line under the photo button before any reading: what can be photographed. */
+export const NOTICE_BEFORE_READING = 'Texto, papel o trámite';
 
 export function toCategory(value: unknown): Category {
   return isCategory(value) ? value : DEFAULT_CATEGORY;

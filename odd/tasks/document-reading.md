@@ -19,7 +19,7 @@ Translation and voice (objectives 4 and 5).
 - **S3 (trazabilidad):** cada `sourceQuote` debe aparecer literalmente en la transcripción. Los hechos sin cita verificable se descartan, nunca se muestran. Esta regla vive en el dominio (`src/tramites/`) y tiene un test.
 - **S4:** una foto ilegible devuelve `{ ok: false, reason: "unreadable" }`, y la app dice "No se ve bien la foto. Tome otra con más luz."
 - **S5:** un aviso ficticio de prueba (sin CURP ni INE reales) queda en `fixtures/`, con un test de extremo a extremo con un Gemini falso y una sola llamada real de smoke.
-- **S6:** la cámara usa `expo-image-picker`, que funciona en Expo Go. El permiso se pide solo al tocar "Tome una foto de su texto, papel o trámite", después de una frase hablada que explica para qué.
+- **S6:** la cámara usa `expo-image-picker`, que funciona en Expo Go. El permiso se pide solo al tocar "Tome una foto de su papel", después de una frase hablada que explica para qué.
 
 ## Log
 
@@ -45,3 +45,4 @@ Translation and voice (objectives 4 and 5).
   - Pending: real smoke with a photo of an object (not run: no real Google calls in this task).
 - **L9 (user, verbatim):** "quita en ela parte del inicio "l" y solo pon texto, papel, tramite" — clarified with the user: the photo button reads "Tome una foto de su texto, papel o trámite" (was "Tome una foto de su papel"). S6 text updated; the read-screen tests that pin the label were updated for this reason only; component tests that use the old label as a generic example are unchanged.
 - **L10 (no-text real smoke):** a text-free image (macOS wallpaper "iMac Blue", converted to JPEG) → 422 `{ ok: false, reason: "no-text", seen: "un patrón gráfico azul abstracto" }` from Gemini on the event network.
+- **L11 (user, verbatim):** "solo queria cambiar el reglon de revise su papel, no la parte de la camara esa dejala como esta" / "como estaba" — L9 was misread. The photo button is back to "Tome una foto de su papel"; the line under it before any reading now says "Texto, papel o trámite" (`NOTICE_BEFORE_READING`). After a reading the per-category notice is unchanged; the diagnostics screen keeps "Revise el papel original". Tests pinning the label and the before-reading line were updated for this reason only.

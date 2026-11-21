@@ -32,7 +32,7 @@ function deferred<T>() {
 
 async function startPhoto() {
   await render(<ReadScreen />);
-  void fireEvent.press(screen.getByRole('button', { name: 'Tome una foto de su texto, papel o trámite' }));
+  void fireEvent.press(screen.getByRole('button', { name: 'Tome una foto de su papel' }));
 }
 
 beforeEach(() => {
