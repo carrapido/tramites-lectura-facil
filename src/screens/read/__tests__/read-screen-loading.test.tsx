@@ -44,12 +44,12 @@ beforeEach(() => {
 });
 
 describe('ReadScreen loading states (field-feedback S1)', () => {
-  it('shows the spinner with "Leyendo su papel." while the photo is read', async () => {
+  it('shows the spinner with "Leyendo." while the photo is read', async () => {
     const reading = deferred<ReadBody>();
     jest.mocked(readNoticePhoto).mockReturnValueOnce(reading.promise);
     await startPhoto();
 
-    expect(await screen.findByRole('progressbar', { name: 'Leyendo su papel.' })).toBeTruthy();
+    expect(await screen.findByRole('progressbar', { name: 'Leyendo.' })).toBeTruthy();
     expect(await screen.findByTestId('loading-spinner')).toBeTruthy();
 
     await act(async () => reading.resolve({ ok: true, category: 'tramite', facts: FACTS }));
@@ -83,7 +83,7 @@ describe('ReadScreen loading states (field-feedback S1)', () => {
     jest.mocked(readNoticePhoto).mockReturnValueOnce(reading.promise);
     await startPhoto();
 
-    await screen.findByRole('progressbar', { name: 'Leyendo su papel.' });
+    await screen.findByRole('progressbar', { name: 'Leyendo.' });
     expect(await screen.findByTestId('loading-still')).toBeTruthy();
     expect(screen.queryByTestId('loading-spinner')).toBeNull();
 

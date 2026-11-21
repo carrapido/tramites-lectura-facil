@@ -21,7 +21,7 @@ Log: `odd/tasks/team-setup.md` (S4, S6).
 - [ ] Tap "Tome una foto de su papel". Expected: the phone says "Necesitamos la cámara para leer su papel." first, and only then asks for the camera permission.
 - [ ] Expected: the rear camera opens by default.
 - [ ] While the photo is sent, expected: the photo button shows busy with its loading symbol.
-- [ ] Take the photo of the fixture. Expected: "Leyendo su papel.", then 3 to 7 cards in plain Spanish, each with an icon, "Escuchar" and "¿De dónde salió?".
+- [ ] Take the photo of the fixture. Expected: "Leyendo.", then 3 to 7 cards in plain Spanish, each with an icon, "Escuchar" and "¿De dónde salió?".
 - [ ] Expected: "Preparando sus tarjetas." with a spinner before the cards. With reduce motion on, a still hourglass shows instead of the spinner.
 - [ ] With `fixtures/aviso-ficticio.jpg`, expected: the category row "Tipo de papel: …" with its notice ("Esto no es asesoría legal"). With `fixtures/invitacion-ficticia.jpg`, expected: the category row "Tipo de papel: …" with "Revise el papel original".
 - [ ] Tap any button. Expected: visible press feedback. With reduce motion on, no scale animation.

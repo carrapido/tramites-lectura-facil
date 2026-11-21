@@ -41,7 +41,7 @@ type PlanState =
 
 const PLAN_FAILED = 'No pudimos preparar la lista. Sus tarjetas siguen aquí.';
 
-const READING = 'Leyendo su papel.';
+const READING = 'Leyendo.';
 const PREPARING_CARDS = 'Preparando sus tarjetas.';
 const PREPARING_PLAN = 'Preparando su lista.';
 
