@@ -12,6 +12,11 @@ const INSTRUCTION = [
   'nota de la escuela o de la comunidad, u otro papel.',
   'Responde solo con JSON: {"readable": boolean, "category": string, "transcript": string, "facts": [...]}.',
   '"readable" es false si la foto no se puede leer; entonces "transcript" es "" y "facts" es [].',
+  'Agrega "textFound": boolean y "seen"?: string.',
+  '"textFound" es false si la foto no muestra ningún texto, ni borroso; entonces "readable" es false.',
+  'Si "textFound" es false, "seen" dice qué muestra la foto en español, de 2 a 6 palabras,',
+  'en minúsculas y con artículo, por ejemplo "una taza de café" o "un perro en un sillón".',
+  '"seen" nunca lleva nombres de personas ni datos personales.',
   '"category" es una de estas palabras, según el contexto del papel:',
   '"tramite" para un aviso oficial, cobro o trámite de gobierno;',
   '"reunion" para una invitación a una reunión, asamblea o evento;',
@@ -26,12 +31,27 @@ const INSTRUCTION = [
   '"box" es opcional y marca la zona de la cita en la foto, con valores de 0 a 1.',
 ].join(' ');
 
-const geminiReading = z.object({
-  readable: z.boolean(),
-  category: lenientCategorySchema,
-  transcript: z.string(),
-  facts: z.array(geminiFactSchema).max(7),
-});
+/** Longer descriptions are dropped, not cut mid-word; the app then gives the message without them. */
+const MAX_SEEN_LENGTH = 60;
+
+/** Lenient: anything but an explicit false keeps today's behavior (S4 amended from L7). */
+const lenientTextFound = z
+  .unknown()
+  .optional()
+  .transform((value) => (value === false ? false : undefined));
+
+const lenientSeen = z.unknown().optional().transform(toSeen);
+
+const geminiReading = z
+  .object({
+    readable: z.boolean(),
+    category: lenientCategorySchema,
+    transcript: z.string(),
+    facts: z.array(geminiFactSchema).max(7),
+    textFound: lenientTextFound,
+    seen: lenientSeen,
+  })
+  .transform(withoutTextAsUnreadable);
 
 const geminiAnswer = z.object({ text: z.string().min(1) });
 
@@ -56,4 +76,16 @@ export class GeminiNoticeReader implements NoticeReader {
     );
     return geminiReading.parse(JSON.parse(geminiAnswer.parse(response).text));
   }
+}
+
+function toSeen(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const seen = value.trim();
+  return seen.length > 0 && seen.length <= MAX_SEEN_LENGTH ? seen : undefined;
+}
+
+/** A photo without text is never readable, so it never replaces the demo recording. */
+function withoutTextAsUnreadable(reading: NoticeReading): NoticeReading {
+  if (reading.textFound !== false) return { ...reading, seen: undefined };
+  return { ...reading, readable: false };
 }

@@ -19,7 +19,7 @@ Translation and voice (objectives 4 and 5).
 - **S3 (trazabilidad):** cada `sourceQuote` debe aparecer literalmente en la transcripción. Los hechos sin cita verificable se descartan, nunca se muestran. Esta regla vive en el dominio (`src/tramites/`) y tiene un test.
 - **S4:** una foto ilegible devuelve `{ ok: false, reason: "unreadable" }`, y la app dice "No se ve bien la foto. Tome otra con más luz."
 - **S5:** un aviso ficticio de prueba (sin CURP ni INE reales) queda en `fixtures/`, con un test de extremo a extremo con un Gemini falso y una sola llamada real de smoke.
-- **S6:** la cámara usa `expo-image-picker`, que funciona en Expo Go. El permiso se pide solo al tocar "Tome una foto de su papel", después de una frase hablada que explica para qué.
+- **S6:** la cámara usa `expo-image-picker`, que funciona en Expo Go. El permiso se pide solo al tocar "Tome una foto de su texto, papel o trámite", después de una frase hablada que explica para qué.
 
 ## Log
 
@@ -36,3 +36,12 @@ Translation and voice (objectives 4 and 5).
   5. A composition failure in `/api/read` returns 500 `config-missing` through the shared `composeOrNull` (also used by smoke); the app says "Falta configurar la laptop. Avise a quien la atiende." Closes R3-compose-failure-mapped-502.
   - Left open: R1-001 (no auth on the API; demo only, avoid `--tunnel` unless needed), R3-duplicate-fact-keys, R3-min-facts-unenforced.
 - **Next:** phone checks only (odd/phone-checks.md).
+- **L7 (user, verbatim):** "cuando no recnozca un texto que simplemente lo dgia y que no diga simplemente no se ve bien la foto pon algo tipo "no puedo saber si es realmente un texto, lo que me estas mostrando en un texto [objeto que se identifica o concepto como]""
+- **S4 amended (from L7):** the reading tells apart three cases. (a) Text that can be read → facts as today. (b) Text that is there but cannot be read (blurry, dark, cut) → `{ ok: false, reason: "unreadable" }` and "No se ve bien la foto. Tome otra con más luz." as today. (c) No text at all → `{ ok: false, reason: "no-text", seen: "<what the photo shows, a short Spanish phrase such as 'una taza de café'>" }` and the app says "No puedo saber si es un texto. Lo que me muestra parece ser: <seen>. Tome una foto de un papel con letras." If Gemini gives no description, the app says "No puedo saber si es un texto. Tome una foto de un papel con letras."
+- **L8 (no-text RED/GREEN):** S4 amended, branch `feat/describe-non-text`.
+  - RED: 4 new suites, 14 of 21 new tests failing for the expected reason (no `NoTextFoundError`, no `textFound`/`seen`, no `no-text` answer or message): `read-notice-no-text` (NoTextFoundError with and without `seen`; blurry stays unreadable), `read-handler-no-text` (reader reports no text with trimmed `seen`; drops empty, over 60 chars and non-text descriptions; never readable without text; instruction asks for `textFound` and `seen`; 422 `no-text` with and without `seen`), `api-client-no-text` (passes `seen` through), `read-screen-no-text` (both messages, es-MX, polite live region, photo button enabled again).
+  - GREEN: 21/21 new tests; full suite 72 suites, 508/508 tests. `npx tsc --noEmit` and `npx expo lint` clean.
+  - Design: `NoticeReading` gains optional `textFound` (only an explicit `false` means no text) and `seen`. `readNotice` throws `NoTextFoundError(seen)` first; blurry text keeps `UnreadableNoticeError` and 422 `unreadable` as before. Gemini's reading without text is forced to `readable: false`, so it never replaces the demo recording.
+  - Pending: real smoke with a photo of an object (not run: no real Google calls in this task).
+- **L9 (user, verbatim):** "quita en ela parte del inicio "l" y solo pon texto, papel, tramite" — clarified with the user: the photo button reads "Tome una foto de su texto, papel o trámite" (was "Tome una foto de su papel"). S6 text updated; the read-screen tests that pin the label were updated for this reason only; component tests that use the old label as a generic example are unchanged.
+- **L10 (no-text real smoke):** a text-free image (macOS wallpaper "iMac Blue", converted to JPEG) → 422 `{ ok: false, reason: "no-text", seen: "un patrón gráfico azul abstracto" }` from Gemini on the event network.

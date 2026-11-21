@@ -22,7 +22,7 @@ jest.mock('@/screens/plan/plan-client', () => ({ fetchPlan: jest.fn() }));
 jest.mock('@/screens/plan/use-reminder', () => ({ useReminder: jest.fn() }));
 jest.mock('@/screens/language/language-store', () => ({ useLanguage: jest.fn(() => 'es') }));
 
-const PHOTO_BUTTON = 'Tome una foto de su papel';
+const PHOTO_BUTTON = 'Tome una foto de su texto, papel o trámite';
 const FIRST_FACTS = [{ kind: 'fecha', text: 'Primer papel: vence el 30.', sourceQuote: 'vence el día 30' }];
 const SECOND_FACTS = [{ kind: 'monto', text: 'Segundo papel: debe 100 pesos.', sourceQuote: 'la cantidad de $100' }];
 const FIRST_PLAN: Plan = { checklist: [{ text: 'Lista del primer papel.', sourceQuote: 'vence el día 30' }], reminder: null };

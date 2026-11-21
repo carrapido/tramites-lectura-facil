@@ -37,7 +37,7 @@ const EXPECTED: [Category, string, string][] = [
 async function readPaper(category: Category) {
   jest.mocked(readNoticePhoto).mockResolvedValue({ ok: true, category, facts: FACTS });
   await render(<ReadScreen />);
-  await fireEvent.press(screen.getByRole('button', { name: 'Tome una foto de su papel' }));
+  await fireEvent.press(screen.getByRole('button', { name: 'Tome una foto de su texto, papel o trámite' }));
   await screen.findByText(FACTS[0].text);
 }
 

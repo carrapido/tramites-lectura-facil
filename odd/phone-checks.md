@@ -18,7 +18,7 @@ Log: `odd/tasks/team-setup.md` (S4, S6).
 
 ## 2. Camera and cards
 
-- [ ] Tap "Tome una foto de su papel". Expected: the phone says "Necesitamos la cámara para leer su papel." first, and only then asks for the camera permission.
+- [ ] Tap "Tome una foto de su texto, papel o trámite". Expected: the phone says "Necesitamos la cámara para leer su papel." first, and only then asks for the camera permission.
 - [ ] Expected: the rear camera opens by default.
 - [ ] While the photo is sent, expected: the photo button shows busy with its loading symbol.
 - [ ] Take the photo of the fixture. Expected: "Leyendo su papel.", then 3 to 7 cards in plain Spanish, each with an icon, "Escuchar" and "¿De dónde salió?".
@@ -60,7 +60,7 @@ Log: `odd/tasks/agentic-checklist.md` (S5, L5).
 
 ## 5. TalkBack or VoiceOver, and 200% font
 
-- [ ] Turn on TalkBack (Android) or VoiceOver (iOS) and move through the read screen. Expected: every button is announced as a button, with its word ("Tome una foto de su papel", "Escuchar", "Escuchar en maya", "¿De dónde salió?", "Sí, recuérdeme", "No, gracias", "Cambiar idioma").
+- [ ] Turn on TalkBack (Android) or VoiceOver (iOS) and move through the read screen. Expected: every button is announced as a button, with its word ("Tome una foto de su texto, papel o trámite", "Escuchar", "Escuchar en maya", "¿De dónde salió?", "Sí, recuérdeme", "No, gracias", "Cambiar idioma").
 - [ ] Listen to a Maya sentence with the screen reader. Note how it pronounces `yua` text on iOS (VoiceOver) and on Android (TalkBack). The app's own "Escuchar en maya" button stays the reliable path.
 - [ ] Set the system font to the largest size (about 200%; on Android also Display size). Check the read screen, the cards, the sheet and "Cambiar idioma". Expected: no clipped or overlapping text, and every button still reachable by scrolling.
 

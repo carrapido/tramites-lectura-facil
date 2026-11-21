@@ -58,6 +58,10 @@ export interface NoticeReading {
   category: Category;
   transcript: string;
   facts: Fact[];
+  /** False when the photo shows no text at all; absent means text was found (S4 amended from L7). */
+  textFound?: boolean;
+  /** When there is no text, a short Spanish phrase for what the photo shows, such as "una taza de café". */
+  seen?: string;
 }
 
 /** Transcribes a paper photo, names its category and extracts candidate facts. */

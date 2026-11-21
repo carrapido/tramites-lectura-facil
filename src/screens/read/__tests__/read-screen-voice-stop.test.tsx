@@ -46,7 +46,7 @@ beforeEach(() => {
 describe('a new photo silences the card voice first (verifier B1)', () => {
   it('stops the Maya voice before the camera reason, and no old "Parar" stays', async () => {
     await render(<ReadScreen />);
-    const photoButton = screen.getByRole('button', { name: 'Tome una foto de su papel' });
+    const photoButton = screen.getByRole('button', { name: 'Tome una foto de su texto, papel o trámite' });
     await fireEvent.press(photoButton);
     await fireEvent.press(await screen.findByRole('button', { name: 'Escuchar en maya' }));
     await act(() => player.emit({ playing: true }));

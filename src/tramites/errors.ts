@@ -13,3 +13,11 @@ export class UnreadableNoticeError extends Error {
     this.name = 'UnreadableNoticeError';
   }
 }
+
+/** The photo shows no text at all; `seen` says what it shows instead, when known (S4 amended from L7). */
+export class NoTextFoundError extends Error {
+  constructor(readonly seen?: string) {
+    super('The photo shows no text');
+    this.name = 'NoTextFoundError';
+  }
+}

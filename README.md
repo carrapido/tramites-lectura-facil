@@ -27,7 +27,7 @@ An inclusion tool for quick, concise reading: a phone photo of any paper (an off
 Any paper works: an official notice, a meeting or event invitation, a prescription or medical appointment, a school or community note, or anything else.
 
 1. Run `npx expo start` and open the app in Expo Go.
-2. Tap "Tome una foto de su papel". The phone says why it needs the camera, then asks for permission.
+2. Tap "Tome una foto de su texto, papel o trámite". The phone says why it needs the camera, then asks for permission.
 3. Photograph a fictitious paper (try `fixtures/aviso-ficticio.jpg`). The laptop sends it to Gemini through `POST /api/read`.
 4. Each card shows one short fact. "¿De dónde salió?" reveals the literal quote of the paper. Facts without a literal quote are never shown.
 

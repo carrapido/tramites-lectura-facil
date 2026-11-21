@@ -19,7 +19,7 @@ jest.mock('expo-image-picker', () => ({
   })),
 }));
 
-const PHOTO_BUTTON = 'Tome una foto de su papel';
+const PHOTO_BUTTON = 'Tome una foto de su texto, papel o trámite';
 
 function mockReadResponse(status: number, body: unknown) {
   global.fetch = jest.fn(async () => new Response(JSON.stringify(body), { status }));
