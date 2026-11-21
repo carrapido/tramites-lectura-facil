@@ -6,6 +6,12 @@ export interface TranslationRequest {
   to: LanguageCode;
 }
 
+export interface BatchTranslationRequest {
+  texts: string[];
+  from: LanguageCode;
+  to: LanguageCode;
+}
+
 /** Rewrites official Spanish into short, plain Spanish. */
 export interface PlainLanguageWriter {
   toPlainSpanish(text: string): Promise<string>;
@@ -14,6 +20,11 @@ export interface PlainLanguageWriter {
 /** Translates plain text between two languages. */
 export interface Translator {
   translate(request: TranslationRequest): Promise<string>;
+}
+
+/** Translates many texts in one call; the answer keeps the order of `texts`. */
+export interface BatchTranslator {
+  translateAll(request: BatchTranslationRequest): Promise<string[]>;
 }
 
 /** A phone photo of a notice, base64-encoded. */

@@ -1,6 +1,7 @@
 import { TranslationServiceClient } from '@google-cloud/translate';
 import { GoogleGenAI } from '@google/genai';
 
+import type { EasyReadDependencies } from '@/tramites/easy-read';
 import type { NoticeReader } from '@/tramites/ports';
 import type { SmokeDependencies } from '@/tramites/smoke';
 
@@ -11,17 +12,24 @@ import { readGoogleEnv } from './google-env';
 
 /** Wires real Google adapters with Application Default Credentials. No API keys. */
 export function composeSmokeDependencies(): SmokeDependencies {
-  const { project, location } = readGoogleEnv(process.env);
-  const translation = new TranslationServiceClient();
-  return {
-    writer: new GeminiPlainLanguageWriter(createGeminiModels(project, location)),
-    translator: new CloudTranslator(translation, project),
-  };
+  return composeTextAdapters();
+}
+
+export function composeEasyRead(): EasyReadDependencies {
+  return composeTextAdapters();
 }
 
 export function composeNoticeReader(): NoticeReader {
   const { project, location } = readGoogleEnv(process.env);
   return new GeminiNoticeReader(createGeminiModels(project, location));
+}
+
+function composeTextAdapters(): { writer: GeminiPlainLanguageWriter; translator: CloudTranslator } {
+  const { project, location } = readGoogleEnv(process.env);
+  return {
+    writer: new GeminiPlainLanguageWriter(createGeminiModels(project, location)),
+    translator: new CloudTranslator(new TranslationServiceClient(), project),
+  };
 }
 
 function createGeminiModels(project: string, location: string): GoogleGenAI['models'] {

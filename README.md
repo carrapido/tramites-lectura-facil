@@ -31,6 +31,18 @@ A phone photo of a Mexican government notice becomes short fact cards in plain S
 
 "Ver conexión" opens the diagnostics screen (`/diagnostico`).
 
+## Easy-read cards
+
+`POST /api/easy-read` turns the facts from `POST /api/read` into cards in plain Spanish and Yucatec Maya.
+
+- Request: `{ "facts": Fact[] }`, 1 to 7 facts `{ kind, text, sourceQuote, box? }`. Anything else returns 400 `invalid-request`.
+- Response: `{ "ok": true, "cards": [{ kind, plainSpanish, maya, mayaStatus, sourceQuote, box? }] }`.
+- A fact text above 15 words is rewritten once by Gemini. Maya comes from one Cloud Translation call (es → yua) for all cards.
+- `mayaStatus` is `machine-unreviewed`, or `unavailable` with `maya: null` when Translation fails; plain Spanish is always delivered.
+- Missing ADC returns 503 `adc-missing`; a bad environment returns 500 `config-missing`.
+- The app calls it through `fetchEasyRead(facts)` in `src/screens/easy-read-client.ts`.
+- Label rule: every Maya sentence is shown under its Spanish, with the label "Traducción automática, sin revisar" (`MACHINE_TRANSLATION_LABEL` in `src/tramites/easy-read.ts`).
+
 ## When the event Wi-Fi blocks phone-to-laptop traffic
 
 - Tunnel: `npx expo start --tunnel` (https://docs.expo.dev/versions/v58.0.0/more/expo-cli/).
