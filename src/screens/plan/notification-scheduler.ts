@@ -1,6 +1,7 @@
 import {
   AndroidImportance,
   cancelAllScheduledNotificationsAsync,
+  cancelScheduledNotificationAsync,
   requestPermissionsAsync,
   SchedulableTriggerInputTypes,
   scheduleNotificationAsync,
@@ -22,6 +23,13 @@ const SPEECH_FALLBACK_MS = 8_000;
 
 const CHANNEL_ID = 'reminders';
 
+/**
+ * Fixed identifiers make a second "Sí" replace the first reminders instead of adding duplicates,
+ * even after the app restarts. https://docs.expo.dev/versions/v58.0.0/sdk/notifications/#notificationrequestinput
+ */
+const DAY_BEFORE_ID = 'tramite-reminder-day-before';
+const DUE_DAY_ID = 'tramite-reminder-due-day';
+
 /** The person said no to notifications; nothing was scheduled. */
 export class PermissionDeniedError extends Error {
   constructor() {
@@ -41,6 +49,7 @@ export function createNotificationScheduler(now: () => Date = () => new Date()):
       await ensureAndroidChannel();
       const permission = await requestPermissionsAsync();
       if (!permission.granted) throw new PermissionDeniedError();
+      await cancelPreviousReminders();
       await scheduleMoments(reminder, checklist, now());
     },
   };
@@ -48,6 +57,10 @@ export function createNotificationScheduler(now: () => Date = () => new Date()):
 
 export async function cancelAllReminders(): Promise<void> {
   await cancelAllScheduledNotificationsAsync();
+}
+
+async function cancelPreviousReminders(): Promise<void> {
+  await Promise.all([DAY_BEFORE_ID, DUE_DAY_ID].map((identifier) => cancelScheduledNotificationAsync(identifier)));
 }
 
 function speakReason(): Promise<void> {
@@ -74,11 +87,12 @@ async function ensureAndroidChannel(): Promise<void> {
 async function scheduleMoments(reminder: Reminder, checklist: ChecklistItem[], now: Date): Promise<void> {
   const { dayBefore, dueDay } = reminderTexts(reminder, checklist);
   const moments = [
-    { date: localMoment(reminder.dueDate, -1, 10), body: dayBefore },
-    { date: localMoment(reminder.dueDate, 0, 8), body: dueDay },
+    { identifier: DAY_BEFORE_ID, date: localMoment(reminder.dueDate, -1, 10), body: dayBefore },
+    { identifier: DUE_DAY_ID, date: localMoment(reminder.dueDate, 0, 8), body: dueDay },
   ];
-  for (const { date, body } of moments.filter((moment) => moment.date > now)) {
+  for (const { identifier, date, body } of moments.filter((moment) => moment.date > now)) {
     await scheduleNotificationAsync({
+      identifier,
       content: { title: NOTIFICATION_TITLE, body },
       trigger: { type: SchedulableTriggerInputTypes.DATE, date, channelId: CHANNEL_ID },
     });

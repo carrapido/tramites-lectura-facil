@@ -6,6 +6,7 @@ import {
   NOTIFICATION_TITLE,
   PERMISSION_REASON,
   PermissionDeniedError,
+  cancelAllReminders,
   createNotificationScheduler,
 } from '@/screens/plan/notification-scheduler';
 import type { Reminder } from '@/tramites/plan';
@@ -16,6 +17,8 @@ jest.mock('expo-notifications', () => ({
   requestPermissionsAsync: jest.fn(),
   scheduleNotificationAsync: jest.fn(async () => 'notification-id'),
   cancelAllScheduledNotificationsAsync: jest.fn(async () => undefined),
+  cancelScheduledNotificationAsync: jest.fn(async () => undefined),
+  getAllScheduledNotificationsAsync: jest.fn(async () => []),
   setNotificationChannelAsync: jest.fn(async () => null),
   SchedulableTriggerInputTypes: { DATE: 'date' },
   AndroidImportance: { HIGH: 6 },
@@ -112,5 +115,75 @@ describe('notification scheduler (S5, S6)', () => {
 
     expect(Notifications.requestPermissionsAsync).toHaveBeenCalledTimes(1);
     jest.useRealTimers();
+  });
+});
+
+/** The phone's pending notifications, keyed by identifier, as `expo-notifications` keeps them. */
+function phoneStore(): { pending: Map<string, Notifications.NotificationRequestInput>; scheduledIds: string[] } {
+  const pending = new Map<string, Notifications.NotificationRequestInput>();
+  const scheduledIds: string[] = [];
+  jest.mocked(Notifications.scheduleNotificationAsync).mockImplementation(async (request) => {
+    const id = request.identifier ?? `generated-${scheduledIds.length + 1}`;
+    pending.set(id, request);
+    scheduledIds.push(id);
+    return id;
+  });
+  jest.mocked(Notifications.cancelScheduledNotificationAsync).mockImplementation(async (id) => {
+    pending.delete(id);
+  });
+  jest.mocked(Notifications.cancelAllScheduledNotificationsAsync).mockImplementation(async () => {
+    pending.clear();
+  });
+  return { pending, scheduledIds };
+}
+
+const OTHER_REQUEST: Notifications.NotificationRequestInput = {
+  content: { title: 'Otro aviso' },
+  trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(2026, 11, 1, 9, 0) },
+};
+
+describe('idempotent reminders (L5 duplicates)', () => {
+  it('cancels the first two reminders on a second "Sí" and leaves exactly two scheduled', async () => {
+    const { pending, scheduledIds } = phoneStore();
+    const scheduler = createNotificationScheduler(() => new Date(2026, 10, 21, 9, 0));
+
+    await scheduler.schedule(REMINDER, CHECKLIST);
+    const firstIds = [...scheduledIds];
+    await scheduler.schedule(REMINDER, CHECKLIST);
+
+    expect(firstIds).toHaveLength(2);
+    for (const id of firstIds) expect(Notifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith(id);
+    expect(pending.size).toBe(2);
+  });
+
+  it('leaves exactly the two fixed reminder ids scheduled after two consecutive schedules', async () => {
+    const { pending } = phoneStore();
+    const scheduler = createNotificationScheduler(() => new Date(2026, 10, 21, 9, 0));
+
+    await scheduler.schedule(REMINDER, CHECKLIST);
+    await scheduler.schedule(REMINDER, CHECKLIST);
+
+    expect([...pending.keys()].sort()).toEqual(['tramite-reminder-day-before', 'tramite-reminder-due-day']);
+  });
+
+  it('cancelAllReminders cancels the scheduled reminders', async () => {
+    const { pending } = phoneStore();
+    await createNotificationScheduler(() => new Date(2026, 10, 21, 9, 0)).schedule(REMINDER, CHECKLIST);
+
+    await cancelAllReminders();
+
+    expect(pending.size).toBe(0);
+  });
+
+  it('keeps a notification that is not a reminder when scheduling again', async () => {
+    const { pending } = phoneStore();
+    pending.set('other-id', OTHER_REQUEST);
+    const scheduler = createNotificationScheduler(() => new Date(2026, 10, 21, 9, 0));
+
+    await scheduler.schedule(REMINDER, CHECKLIST);
+    await scheduler.schedule(REMINDER, CHECKLIST);
+
+    expect(pending.get('other-id')).toBe(OTHER_REQUEST);
+    expect(pending.size).toBe(3);
   });
 });
